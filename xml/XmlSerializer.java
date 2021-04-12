@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 public final class XmlSerializer
-{
+{/*
 	private static CharSequence serializeArray(final Object parr){
 		final int arrlen=Array.getLength(parr);
 		if(0==arrlen){
@@ -560,7 +560,7 @@ public final class XmlSerializer
 		}
 		return hexBuilder;
 	}
-private XmlSerializer(){}
+private XmlSerializer(){}*/
 }
 /*util.obj2xml=(key,val)=>{
 	if("number"===typeof val){
