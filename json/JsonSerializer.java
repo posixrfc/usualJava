@@ -7,6 +7,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -345,7 +346,6 @@ protected static String calcJsonName(Method func)
 }
 private static CharSequence serializeClass(Class<?> pclass)
 {
-	final StringBuilder jsonBuilder=new StringBuilder();
 	return null;
 }
 private static CharSequence serializeEnum(Class<?> penum)
@@ -477,7 +477,7 @@ public static CharSequence toJsonStandard(CharSequence chars)
 	charsfor:for(int i=0,len=chars.length();len!=i;i++)
 	{
 		char char1=chars.charAt(i);
-		if((47<char1&&char1<58)||(64<char1&&char1<91)||(96<char1&&char1<123)){
+		if((96<char1&&char1<123)||(64<char1&&char1<91)||(47<char1&&char1<58)){
 			hexBuilder.append(char1);
 			continue;
 		}
@@ -519,9 +519,13 @@ public static CharSequence toJsonStandard(CharSequence chars)
 		case '`':
 		case '~':
 		case '.':
+		case '[':
+		case ']':
 		case ',':
 		case '>':
 		case '<':
+		case '{':
+		case '}':
 		case ':':
 		case ';':
 		case '_':
@@ -539,8 +543,693 @@ public static CharSequence toJsonStandard(CharSequence chars)
 	}
 	return hexBuilder;
 }
-public static Object parseJson(CharSequence src)
+@SuppressWarnings("unchecked")
+public static Object parseJson(CharSequence json)
 {
+	if(null==json || json.length()==0){
+		return null;
+	}
+	int[] stat=new int[]{json.length(),0};
+	CharSequence key=null;
+	Object val=null,obj=null;
+	char chr;
+	runloop:for(int i=0;i!=stat[0];)
+	{
+		chr=json.charAt(i);
+		if(Character.isWhitespace(chr)){
+			i+=1;
+			continue;
+		}
+		stat[1]=i;
+		switch(chr)
+		{
+		case '{':
+			if(null==obj){
+				obj=new HashMap<String,Object>();
+				i+=1;
+				continue runloop;
+			}
+			val=parseMap(json,stat);
+			if(null==val){
+				if(0==stat[0]){
+					System.err.println("idx=>"+stat[1]);
+					return null;
+				}else{
+					key=null;
+					i=stat[1];
+					continue runloop;
+				}
+			}else{
+				if(obj instanceof Iterable){
+					((List<Object>)obj).add(val);
+				}else{
+					if(null!=key){
+						((Map<String,Object>)obj).put(key.toString(),val);
+					}
+					key=null;
+				}
+				i=stat[1];
+				continue runloop;
+			}
+		case '[':
+			if(null==obj){
+				obj=new ArrayList<Object>();
+				i+=1;
+				continue runloop;
+			}
+			val=parseList(json,stat);
+			if(null==val){
+				if(0==stat[0]){
+					System.err.println("idx=>"+stat[1]);
+					return null;
+				}else{
+					key=null;
+					i=stat[1];
+					continue runloop;
+				}
+			}else{
+				if(obj instanceof Iterable){
+					((List<Object>)obj).add(val);
+				}else{
+					if(null!=key){
+						((Map<String,Object>)obj).put(key.toString(),val);
+					}
+					key=null;
+				}
+				i=stat[1];
+				continue runloop;
+			}
+		case '"':
+			val=parseStr(json,stat);
+			if(null==val){
+				if(0==stat[0]){
+					System.err.println("idx=>"+stat[1]);
+					return null;
+				}else{
+					key=null;
+					i=stat[1];
+					continue runloop;
+				}
+			}else{
+				if(obj instanceof Iterable){
+					((List<Object>)obj).add(val);
+				}else{
+					if(null==key){
+						key=(CharSequence)val;
+					}else{
+						((Map<String,Object>)obj).put(key.toString(),val);
+						key=null;
+					}
+				}
+				i=stat[1];
+				continue runloop;
+			}
+		case 'n':
+			val=parseNull(json,stat);
+			if(null==val){
+				System.err.println("idx=>"+stat[1]);
+				return null;
+			}else{
+				key=null;
+				i=stat[1];
+				continue runloop;
+			}
+		case 't':
+		case 'f':
+			val=parseBool(json,stat);
+			if(null==val){
+				System.err.println("idx=>"+stat[1]);
+				return null;
+			}else{
+				if(obj instanceof Iterable){
+					((List<Object>)obj).add(val);
+				}else{
+					if(null!=key){
+						((Map<String,Object>)obj).put(key.toString(),val);
+					}
+					key=null;
+				}
+				i=stat[1];
+				continue runloop;
+			}
+		case '+':
+		case '-':
+		case '.':
+		case 'e':
+		case 'E':
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			val=parseNum(json,stat);
+			if(null==val){
+				System.err.println("idx=>"+stat[1]);
+				return null;
+			}else{
+				if(obj instanceof Iterable){
+					((List<Object>)obj).add(val);
+				}else{
+					if(null!=key){
+						((Map<String,Object>)obj).put(key.toString(),val);
+					}
+					key=null;
+				}
+				i=stat[1];
+				continue runloop;
+			}
+		case ',':
+		case ':':
+			i+=1;
+			continue runloop;
+		case '}':
+		case ']':
+			return obj;
+		default:
+			System.err.println("idx=>"+i);
+			return null;
+		}
+	}
+	return obj;
+}
+protected static Map<String,?> parseMap(CharSequence src,int[] idx)
+{
+	Map<String,Object> obj=new HashMap<String,Object>();
+	CharSequence key=null;
+	Object val=null;
+	charsfor:for(int i=idx[1]+1;idx[0]!=i;)
+	{
+		char chr=src.charAt(i);
+		if(Character.isWhitespace(chr)){
+			continue;
+		}
+		switch(chr)
+		{
+		case '}':
+			idx[1]=i+1;
+			return obj.size()==0 ? null : obj;
+		case '"':
+			idx[1]=i;
+			if(null==key){
+				key=parseStr(src,idx);
+				if(0==idx[0]){
+					return null;
+				}
+				if(null==key){
+					idx[0]=0;
+					return null;
+				}else{
+					i=idx[1];
+					continue charsfor;
+				}
+			}else{
+				val=parseStr(src,idx);
+				if(0==idx[0]){
+					return null;
+				}
+				i=idx[1];
+				if(null!=val){
+					obj.put(key.toString(),val);
+				}
+				key=null;
+				continue charsfor;
+			}
+		case '{':
+			idx[1]=i;
+			if(null==key){
+				idx[0]=0;
+				return null;
+			}
+			val=parseMap(src,idx);
+			if(0==idx[0]){
+				return null;
+			}
+			i=idx[1];
+			if(null!=val){
+				obj.put(key.toString(),val);
+			}
+			key=null;
+			continue charsfor;
+		case '[':
+			idx[1]=i;
+			if(null==key){
+				idx[0]=0;
+				return null;
+			}
+			val=parseStr(src,idx);
+			if(0==idx[0]){
+				return null;
+			}
+			i=idx[1];
+			if(null!=val){
+				obj.put(key.toString(),val);
+			}
+			key=null;
+			continue charsfor;
+		case 'n':
+			idx[1]=i;
+			if(null==key){
+				idx[0]=0;
+				return null;
+			}
+			val=parseNull(src,idx);
+			if(0==idx[0]){
+				return null;
+			}
+			i=idx[1];
+			key=null;
+			continue charsfor;
+		case 't':
+		case 'f':
+			idx[1]=i;
+			if(null==key){
+				idx[0]=0;
+				return null;
+			}
+			val=parseBool(src,idx);
+			if(0==idx[0]){
+				return null;
+			}
+			i=idx[1];
+			if(null!=val){
+				obj.put(key.toString(),val);
+			}
+			key=null;
+			continue charsfor;
+		case '+':
+		case '-':
+		case '.':
+		case 'e':
+		case 'E':
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			idx[1]=i;
+			if(null==key){
+				idx[0]=0;
+				return null;
+			}
+			val=parseNum(src,idx);
+			if(0==idx[0]){
+				return null;
+			}
+			i=idx[1];
+			if(null!=val){
+				obj.put(key.toString(),val);
+			}
+			key=null;
+			continue charsfor;
+		case ':':
+		case ',':
+			i+=1;
+			continue charsfor;
+		default:
+			return null;
+		}
+	}
 	return null;
+}
+protected static List<?> parseList(CharSequence src,int[] idx)
+{
+	List<Object> lst=new ArrayList<Object>();
+	Object val=null;
+	charsfor:for(int i=idx[1]+1;idx[0]!=i;)
+	{
+		char chr=src.charAt(i);
+		if(Character.isWhitespace(chr)){
+			continue;
+		}
+		switch(chr)
+		{
+		case ']':
+			idx[1]=i+1;
+			return lst.size()==0 ? null : lst;
+		case '"':
+			idx[1]=i;
+			val=parseStr(src,idx);
+			if(0==idx[0]){
+				return null;
+			}
+			i=idx[1];
+			if(null!=val){
+				lst.add(val);
+			}
+			continue charsfor;
+		case '{':
+			idx[1]=i;
+			val=parseMap(src,idx);
+			if(0==idx[0]){
+				return null;
+			}
+			i=idx[1];
+			if(null!=val){
+				lst.add(val);
+			}
+			continue charsfor;
+		case '[':
+			idx[1]=i;
+			val=parseList(src,idx);
+			if(0==idx[0]){
+				return null;
+			}
+			i=idx[1];
+			if(null!=val){
+				lst.add(val);
+			}
+			continue charsfor;
+		case 'n':
+			idx[1]=i;
+			val=parseNull(src,idx);
+			if(0==idx[0]){
+				return null;
+			}
+			i=idx[1];
+			continue charsfor;
+		case 't':
+		case 'f':
+			idx[1]=i;
+			val=parseBool(src,idx);
+			if(0==idx[0]){
+				return null;
+			}
+			i=idx[1];
+			if(null!=val){
+				lst.add(val);
+			}
+			continue charsfor;
+		case '+':
+		case '-':
+		case '.':
+		case 'e':
+		case 'E':
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			idx[1]=i;
+			val=parseNum(src,idx);
+			if(0==idx[0]){
+				return null;
+			}
+			i=idx[1];
+			if(null!=val){
+				lst.add(val);
+			}
+			continue charsfor;
+		case ',':
+			i+=1;
+			continue charsfor;
+		default:
+			return null;
+		}
+	}
+	return null;
+}
+protected static StringBuilder parseStr(CharSequence src,int[] idx)
+{
+	StringBuilder sb=new StringBuilder();
+	char chr;
+	charsfor:for(int i=idx[1]+1;i!=idx[0];i++)
+	{
+		chr=src.charAt(i);
+		if('"'==chr){
+			idx[1]=i+1;
+			break;
+		}
+		if((96<chr&&chr<123)||(64<chr&&chr<91)||(47<chr&&chr<58)){
+			sb.append(chr);
+			continue;
+		}
+		switch(chr)
+		{
+		case '\\':
+			i+=1;
+			chr=src.charAt(i);
+			switch(chr)
+			{
+			case 'b':
+				sb.append('\b');
+				break;
+			case 'f':
+				sb.append('\f');
+				break;
+			case 'n':
+				sb.append('\n');
+				break;
+			case 'r':
+				sb.append('\r');
+				break;
+			case 't':
+				sb.append('\t');
+				break;
+			case '\\':
+				sb.append('\\');
+				break;
+			case '/':
+				sb.append('/');
+				break;
+			case '"':
+				sb.append('"');
+				break;
+			case 'u':
+				try{
+					chr=(char)Integer.parseInt(src.subSequence(i+1,i+5).toString(),16);
+				}catch(NumberFormatException e){
+					idx[0]=0;
+					idx[1]=i+1;
+					return null;
+				}
+				sb.append(chr);
+				i+=4;
+				break;
+			default:
+				idx[0]=0;
+				idx[1]=i;
+				return null;
+			}
+			continue charsfor;
+		case ' ':
+		case '+':
+		case '=':
+		case '-':
+		case ')':
+		case '(':
+		case '*':
+		case '&':
+		case '^':
+		case '%':
+		case '$':
+		case '#':
+		case '@':
+		case '!':
+		case '`':
+		case '~':
+		case '.':
+		case '[':
+		case ']':
+		case ',':
+		case '>':
+		case '<':
+		case '{':
+		case '}':
+		case ':':
+		case ';':
+		case '_':
+		case '|':
+		case '\'':
+		case '?':
+		case '/':
+			sb.append(chr);
+			continue charsfor;
+		default:
+			sb.append(chr);
+			continue charsfor;
+		}
+	}
+	return sb.length()==0 ? null : sb;
+}
+protected static StringBuilder parseNum(CharSequence src,int[] idx)//-1.33e-3
+{
+	StringBuilder sb=new StringBuilder();
+	char chr;
+	int positive=0,negative=0,upper=0,lower=0,point=0;
+	charsfor:for(int i=idx[1];i!=idx[0];i++)
+	{
+		chr=src.charAt(i);
+		switch(chr)
+		{
+		case '+':
+			positive+=1;
+			if(i==idx[1]){
+				sb.append(chr);
+				continue charsfor;
+			}
+			chr=sb.charAt(i-idx[1]-1);
+			if('E'==chr || 'e'==chr){
+				sb.append(src.charAt(i));
+				continue charsfor;
+			}
+			idx[0]=0;
+			idx[1]=i;
+			return null;
+		case '-':
+			negative+=1;
+			if(i==idx[1]){
+				sb.append(chr);
+				continue charsfor;
+			}
+			chr=sb.charAt(i-idx[1]-1);
+			if('E'==chr || 'e'==chr){
+				sb.append(src.charAt(i));
+				continue charsfor;
+			}
+			idx[0]=0;
+			idx[1]=i;
+			return null;
+		case '.':
+			point+=1;
+			if(i==idx[1]){
+				idx[0]=0;
+				return null;
+			}
+			chr=sb.charAt(i-idx[1]-1);
+			if('9'<chr || '0'>chr){
+				idx[0]=0;
+				return null;
+			}
+			sb.append(src.charAt(i));
+			continue charsfor;
+		case 'e':
+			lower+=1;
+			if(i==idx[1]){
+				idx[0]=0;
+				return null;
+			}
+			chr=sb.charAt(i-idx[1]-1);
+			if('9'<chr || '0'>chr){
+				idx[0]=0;
+				return null;
+			}
+			sb.append(src.charAt(i));
+			continue charsfor;
+		case 'E':
+			upper+=1;
+			if(i==idx[1]){
+				idx[0]=0;
+				return null;
+			}
+			chr=sb.charAt(i-idx[1]-1);
+			if('9'<chr || '0'>chr){
+				idx[0]=0;
+				return null;
+			}
+			sb.append(src.charAt(i));
+			continue charsfor;
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			sb.append(chr);
+			continue charsfor;
+		default:
+			break charsfor;
+		}
+	}
+	if(sb.length()==0){
+		return null;
+	}
+	chr=sb.charAt(sb.length()-1);
+	if('+'==chr && '-'==chr || '.'==chr || 'e'==chr ||'E'==chr){
+		idx[0]=0;
+		return null;
+	}
+	if(positive+negative>2 || point>1 || upper+lower>1){
+		idx[0]=0;
+		return null;
+	}
+	idx[1]+=sb.length();
+	return sb;
+}
+protected static String parseBool(CharSequence src,int[] idx)
+{
+	if(src.charAt(idx[1]+1)=='r'){
+		if(src.charAt(idx[1]+2)!='u'){
+			idx[0]=0;
+			idx[1]+=2;
+			return null;
+		}
+		if(src.charAt(idx[1]+3)!='e'){
+			idx[0]=0;
+			idx[1]+=3;
+			return null;
+		}
+		idx[1]+=4;
+		return "true";
+	}
+	if(src.charAt(idx[1]+1)=='a'){
+		if(src.charAt(idx[1]+2)!='l'){
+			idx[0]=0;
+			idx[1]+=2;
+			return null;
+		}
+		if(src.charAt(idx[1]+3)!='s'){
+			idx[0]=0;
+			idx[1]+=3;
+			return null;
+		}
+		if(src.charAt(idx[1]+4)!='e'){
+			idx[0]=0;
+			idx[1]+=4;
+			return null;
+		}
+		idx[1]+=5;
+		return "false";
+	}
+	idx[0]=0;
+	return null;
+}
+protected static String parseNull(CharSequence src,int[] idx)
+{
+	if(src.charAt(idx[1]+1)!='u'){
+		idx[0]=0;
+		idx[1]+=1;
+		return null;
+	}
+	if(src.charAt(idx[1]+2)!='l'){
+		idx[0]=0;
+		idx[1]+=2;
+		return null;
+	}
+	if(src.charAt(idx[1]+3)!='l'){
+		idx[0]=0;
+		idx[1]+=3;
+		return null;
+	}
+	idx[1]+=4;
+	return "null";
 }
 }
