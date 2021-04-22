@@ -12,7 +12,11 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 public final class XmlSerializer
-{/*
+{
+
+	public static Object parseXml(CharSequence xml) {
+		return null;
+	}/*
 	private static CharSequence serializeArray(final Object parr){
 		final int arrlen=Array.getLength(parr);
 		if(0==arrlen){
