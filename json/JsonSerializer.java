@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import wcy.usual.NotFinal;
+import wcy.usual.Tool;
 
 import java.util.Set;
 
@@ -25,18 +26,23 @@ protected static CharSequence serializeArray(Object parr)
 	if(0==arrlen){
 		return null;
 	}
-	final StringBuilder jsonBuilder=new StringBuilder("[");
-	CharSequence tmpValue=null;
-	for(int i=0;arrlen!=i;i++){
-		tmpValue=serialize(Array.get(parr,i),true,true);
-		if(null!=tmpValue){
-			jsonBuilder.append(tmpValue).append(',');
+	StringBuilder varstr=new StringBuilder("[");
+	for(int i=0;arrlen!=i;i++)
+	{
+		Object idxval=Array.get(parr,i);
+		if(null==idxval){
+			continue;
 		}
+		CharSequence tmpValue=serialize(idxval,true,true);
+		if(null==tmpValue){
+			continue;
+		}
+		varstr.append(tmpValue).append(',');
 	}
-	if(jsonBuilder.length()==1){
+	if(varstr.length()==1){
 		return null;
 	}
-	return jsonBuilder.deleteCharAt(jsonBuilder.length()-1).append(']');
+	return varstr.deleteCharAt(varstr.length()-1).append(']');
 }
 @Deprecated
 protected static CharSequence serializeAnnotation(Annotation pclass)
@@ -49,11 +55,11 @@ protected static CharSequence serializeMap(Map<?,?> pmap)
 	if(eset.size()==0){
 		return null;
 	}
-	Iterator<?> itor = eset.iterator();
+	Iterator<?> itor=eset.iterator();
 	Entry<?,?> etr=null;
 	CharSequence kstr,vstr;
 	Object tmpValue=null;
-	StringBuilder jsonBuilder=new StringBuilder("{");
+	StringBuilder varstr=new StringBuilder("{");
 	do{
 		etr=(Entry<?,?>)itor.next();
 		tmpValue=etr.getKey();
@@ -72,12 +78,12 @@ protected static CharSequence serializeMap(Map<?,?> pmap)
 		if(null==vstr){
 			continue;
 		}
-		jsonBuilder.append(kstr).append(':').append(vstr).append(',');
+		varstr.append(kstr).append(':').append(vstr).append(',');
 	}while(itor.hasNext());
-	if(jsonBuilder.length()==1){
+	if(varstr.length()==1){
 		return null;
 	}
-	return jsonBuilder.deleteCharAt(jsonBuilder.length()-1).append('}');
+	return varstr.deleteCharAt(varstr.length()-1).append('}');
 }
 protected static CharSequence serializeIterable(Iterable<?> piterator)
 {
@@ -85,158 +91,161 @@ protected static CharSequence serializeIterable(Iterable<?> piterator)
 	if(!iterator.hasNext()){
 		return null;
 	}
-	StringBuilder jsonBuilder=new StringBuilder("[");
-	CharSequence tmpValue=null;
+	StringBuilder varstr=new StringBuilder("[");
 	do{
-		tmpValue=serialize(iterator.next(),true,true);
-		if(null!=tmpValue){
-			jsonBuilder.append(tmpValue).append(',');
+		Object idxval=iterator.next();
+		if(null==idxval){
+			continue;
 		}
-	}while (iterator.hasNext());
-	if(jsonBuilder.length()==1){
+		CharSequence tmpValue=serialize(idxval,true,true);
+		if(null!=tmpValue){
+			varstr.append(tmpValue).append(',');
+		}
+	}while(iterator.hasNext());
+	if(varstr.length()==1){
 		return null;
 	}
-	return jsonBuilder.deleteCharAt(jsonBuilder.length()-1).append(']');
+	return varstr.deleteCharAt(varstr.length()-1).append(']');
 }
 protected static void getMembers(List<Method> validMds,List<Method> elideMds,List<Field> validFds,List<Field> elideFds,Class<?> pclass,boolean asInstance)
 {
-	Method[] lmds=pclass.getDeclaredMethods();
-	if(null!=lmds && 0!=lmds.length)
+	Field[] lfds=pclass.getDeclaredFields();
+	if(null!=lfds && 0!=lfds.length)
 	{
-		loopmd:for(Method ltmd:lmds)
+		loopfds:for(Field ltfd:lfds)
 		{
-			int sign=ltmd.getModifiers();
+			int sign=ltfd.getModifiers();
 			if(Modifier.isStatic(sign)==asInstance){
 				continue;
 			}
-			if(ltmd.getParameterCount()!=0){
-				continue;
+			final String fname=ltfd.getName();
+			for(Field lifd:elideFds){
+				if(lifd.getName().equals(fname)){//已经被忽略,不重复忽略
+					continue loopfds;
+				}
 			}
-			if(ltmd.getReturnType()==void.class||ltmd.getReturnType()==Void.class){
-				continue;
+			for(Field lifd:validFds){
+				if(lifd.getName().equals(fname)){//已经被添加,不重复添加
+					continue loopfds;
+				}
 			}
-			if(Modifier.isAbstract(sign)){
-				continue;
+			for(Method limd:elideMds){
+				if(Tool.calcAttrName(limd).equals(fname)){
+					continue loopfds;
+				}
 			}
-			Require require=ltmd.getAnnotation(Require.class);
-			final String mname=ltmd.getName();
+			for(Method limd:validMds){
+				if(Tool.calcAttrName(limd).equals(fname)){
+					continue loopfds;
+				}
+			}
+			JsonRequire require=ltfd.getAnnotation(JsonRequire.class);
 			if(null==require){//没成员注解
 				if(!Modifier.isPublic(sign)){
-					continue loopmd;
+					continue loopfds;
 				}
-				for(Method limd:elideMds){
-					if(limd.getName().equals(mname)){//已经被忽略,不添加
-						continue loopmd;
-					}
-				}
-				for(Method limd:validMds){
-					if(limd.getName().equals(mname)){//已经被添加,不重复添加
-						continue loopmd;
-					}
-				}
-				validMds.add(ltmd);
+				validFds.add(ltfd);
 			}else{//有成员注解
-				for(Method limd:elideMds){
-					if(limd.getName().equals(mname)){//已经被忽略,不添加
-						continue loopmd;
-					}
-				}
-				for(Method limd:validMds){
-					if(limd.getName().equals(mname)){//已经被添加,不重复添加
-						continue loopmd;
-					}
-				}
 				@SuppressWarnings("unused")
-				boolean b=require.value() ? validMds.add(ltmd) : elideMds.add(ltmd);
+				boolean b=require.value() ? validFds.add(ltfd) : elideFds.add(ltfd);
 			}//有成员注解
-		}//for method
+		}//for field
 	}
-	Field[] lfds=pclass.getDeclaredFields();
-	if(null==lfds || 0==lfds.length){
+	Method[] lmds=pclass.getDeclaredMethods();
+	if(null==lmds || 0==lmds.length){
 		return;
 	}
-	loopfds:for(Field ltfd:lfds)
+	loopmd:for(Method ltmd:lmds)
 	{
-		int sign=ltfd.getModifiers();
+		int sign=ltmd.getModifiers();
 		if(Modifier.isStatic(sign)==asInstance){
 			continue;
 		}
-		Require require=ltfd.getAnnotation(Require.class);
-		final String fname=ltfd.getName();
-		if(null==require){//没成员注解
+		if(ltmd.getParameterCount()!=0){
+			continue;
+		}
+		if(ltmd.getReturnType()==void.class||ltmd.getReturnType()==Void.class){
+			continue;
+		}
+		if(Modifier.isAbstract(sign)){
+			continue;
+		}
+		final String mname=ltmd.getName(),fname=Tool.calcAttrName(ltmd);
+		for(Field lifd:elideFds){
+			if(lifd.getName().equals(fname)){//已经被忽略,不重复忽略
+				continue loopmd;
+			}
+		}
+		for(Field lifd:validFds){
+			if(lifd.getName().equals(fname)){//已经被添加,不重复添加
+				continue loopmd;
+			}
+		}
+		for(Method limd:elideMds){
+			if(limd.getName().equals(mname)){//已经被忽略,不添加
+				continue loopmd;
+			}
+		}
+		for(Method limd:validMds){
+			if(limd.getName().equals(mname)){//已经被添加,不重复添加
+				continue loopmd;
+			}
+		}
+		JsonRequire require=ltmd.getAnnotation(JsonRequire.class);
+		if(null==require){
 			if(!Modifier.isPublic(sign)){
-				continue loopfds;
+				continue loopmd;
 			}
-			for(Field lifd:elideFds){
-				if(lifd.getName().equals(fname)){//已经被忽略,不添加
-					continue loopfds;
-				}
-			}
-			for(Field lifd:validFds){
-				if(lifd.getName().equals(fname)){//已经被添加,不重复添加
-					continue loopfds;
-				}
-			}
-			validFds.add(ltfd);
+			validMds.add(ltmd);
 		}else{//有成员注解
-			for(Field lifd:elideFds){
-				if(lifd.getName().equals(fname)){//已经被忽略,不添加
-					continue loopfds;
-				}
-			}
-			for(Field lifd:validFds){
-				if(lifd.getName().equals(fname)){//已经被添加,不重复添加
-					continue loopfds;
-				}
-			}
 			@SuppressWarnings("unused")
-			boolean b=require.value() ? validFds.add(ltfd) : elideFds.add(ltfd);
+			boolean b=require.value() ? validMds.add(ltmd) : elideMds.add(ltmd);
 		}//有成员注解
-	}//for field
+	}//for method
 }
-private static CharSequence serializeObject(Object pobj)
+protected static CharSequence serializeObject(Object pobj)
 {
-	boolean asInstance=pobj instanceof Class;
+	boolean isclass=pobj instanceof Class;
 	List<Method> allValidMds=new ArrayList<>(),allIgnoreMds=new ArrayList<>();
 	List<Field> allValidFds=new ArrayList<>(),allIgnoreFds=new ArrayList<>();
 	Class<?> lclass=null;
-	if(asInstance){
-		lclass=pobj.getClass();
+	if(isclass){
+		lclass=(Class<?>)pobj;
 	}else{
-		lclass=(Class<?>) pobj;
+		lclass=pobj.getClass();
 	}
 	NotFinal nofinal=null;
 	do{
-		getMembers(allValidMds,allIgnoreMds,allValidFds,allIgnoreFds,lclass,asInstance);
+		getMembers(allValidMds,allIgnoreMds,allValidFds,allIgnoreFds,lclass,!isclass);
 		nofinal=lclass.getDeclaredAnnotation(NotFinal.class);
 		lclass=lclass.getSuperclass();
-	}while(lclass!=null && (Object.class!=lclass || null==nofinal));
+	}while(null!=lclass && (Object.class!=lclass || null!=nofinal));
 	List<String> mnms=new ArrayList<String>(allValidMds.size()),fnms=new ArrayList<String>(allValidFds.size());
 	for(int i=0,len=allValidMds.size();i!=len;i++)
 	{
 		Method md=allValidMds.get(i);
-		Require require=md.getAnnotation(Require.class);
+		JsonRequire require=md.getAnnotation(JsonRequire.class);
 		if(null==require){
-			mnms.add(calcJsonName(md));
+			mnms.add(Tool.calcAttrName(md));
 		}else if(require.toJson().length()==0){
-			mnms.add(calcJsonName(md));
+			mnms.add(Tool.calcAttrName(md));
 		}else{
-			mnms.add(require.toJson());
+			mnms.add(toJsonStandard(require.toJson()).toString());
 		}
 	}
 	for(int i=0,len=allValidFds.size();i!=len;i++)
 	{
 		Field fd=allValidFds.get(i);
-		Require require=fd.getAnnotation(Require.class);
+		JsonRequire require=fd.getAnnotation(JsonRequire.class);
 		if(null==require){
 			fnms.add(fd.getName());
 		}else if(require.toJson().length()==0){
 			fnms.add(fd.getName());
 		}else{
-			fnms.add(require.toJson());
+			fnms.add(toJsonStandard(require.toJson()).toString());
 		}
 	}
-	for(int j=0,jlen=allValidFds.size();j!=jlen;j++)
+	/*for(int j=0,jlen=allValidFds.size();j!=jlen;j++)
 	{
 		String fnm=fnms.get(j);
 		for(int i=0,ilen=allValidMds.size();i!=ilen;)
@@ -250,8 +259,8 @@ private static CharSequence serializeObject(Object pobj)
 				i+=1;
 			}
 		}
-	}
-	StringBuilder jsonBuilder=new StringBuilder("{");
+	}*/
+	StringBuilder varstr=new StringBuilder("{");
 	Object returnValue=null;
 	for(int i=0,len=allValidMds.size();i!=len;i++)
 	{
@@ -259,8 +268,9 @@ private static CharSequence serializeObject(Object pobj)
 		md.setAccessible(true);
 		try{
 			returnValue=md.invoke(pobj);
-		}catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e){
+		}catch(IllegalAccessException|IllegalArgumentException|InvocationTargetException e){
 			e.printStackTrace(System.err);
+			continue;
 		}
 		if(null==returnValue){
 			continue;
@@ -269,7 +279,7 @@ private static CharSequence serializeObject(Object pobj)
 		if(null==chars){
 			continue;
 		}
-		jsonBuilder.append('"').append(toJsonStandard(mnms.get(i))).append("\":").append(chars).append(',');
+		varstr.append('"').append(toJsonStandard(mnms.get(i))).append("\":").append(chars).append(',');
 	}
 	for(int i=0,len=allValidFds.size();i!=len;i++)
 	{
@@ -277,8 +287,9 @@ private static CharSequence serializeObject(Object pobj)
 		fd.setAccessible(true);
 		try{
 			returnValue=fd.get(pobj);
-		}catch(IllegalArgumentException | IllegalAccessException e){
+		}catch(IllegalArgumentException|IllegalAccessException e){
 			e.printStackTrace(System.err);
+			continue;
 		}
 		if(null==returnValue){
 			continue;
@@ -287,68 +298,18 @@ private static CharSequence serializeObject(Object pobj)
 		if(null==chars){
 			continue;
 		}
-		jsonBuilder.append('"').append(toJsonStandard(fnms.get(i))).append("\":").append(chars).append(',');
+		varstr.append('"').append(toJsonStandard(fnms.get(i))).append("\":").append(chars).append(',');
 	}
-	if(jsonBuilder.length()==1){
+	if(varstr.length()==1){
 		return null;
 	}
-	return  jsonBuilder.deleteCharAt(jsonBuilder.length()-1).append('}');
+	return  varstr.deleteCharAt(varstr.length()-1).append('}');
 }
-protected static String calcJsonName(Method func)
+protected static CharSequence serializeClass(Class<?> pclass)
 {
-	String mnm=func.getName();
-	char char1,char2;
-	if(mnm.startsWith("get"))
-	{
-		int mlen=mnm.length();
-		if(3==mlen){
-			return mnm;
-		}
-		char1=mnm.charAt(3);
-		if(4==mlen){
-			if(64<char1&&char1<91){
-				char1=(char)(char1+32);
-			}
-			return String.valueOf((char)(char1));
-		}
-		char2=mnm.charAt(4);
-		if(64<char2&&char2<91){
-			return mnm.substring(3);
-		}
-		if(64<char1&&char1<91){
-			char1=(char)(char1+32);
-		}
-		return char1+mnm.substring(4);
-	}
-	if(mnm.startsWith("is"))
-	{
-		int mlen=mnm.length();
-		if(2==mlen){
-			return mnm;
-		}
-		char1=mnm.charAt(2);
-		if(3==mlen){
-			if(64<char1&&char1<91){
-				char1=(char)(char1+32);
-			}
-			return String.valueOf((char)(char1));
-		}
-		char2=mnm.charAt(3);
-		if(64<char2&&char2<91){
-			return mnm.substring(2);
-		}
-		if(64<char1&&char1<91){
-			char1=(char)(char1+32);
-		}
-		return char1+mnm.substring(3);
-	}
-	return mnm;
+	return '"'+pclass.getName()+'"';
 }
-private static CharSequence serializeClass(Class<?> pclass)
-{
-	return null;
-}
-private static CharSequence serializeEnum(Class<?> penum)
+protected static CharSequence serializeEnum(Class<?> penum)
 {
 	Object[] enums=penum.getEnumConstants();
 	if(null==enums||0==enums.length){
@@ -380,10 +341,10 @@ public static CharSequence serialize(Object pobj,boolean asInstance,boolean asJs
 		return '"'+clazz.getName()+'"';
 	}
 	clazz=pobj.getClass();
-	if(Character.class==clazz){
-		return "\""+ toJsonStandard(String.valueOf((char)pobj))+'"';
-	}
 	if(asJsonValue){
+		if(Character.class==clazz){
+			return "\""+ toJsonStandard(String.valueOf((char)pobj))+'"';
+		}
 		if(Boolean.class==clazz){
 			return String.valueOf((boolean)pobj);
 		}
@@ -406,6 +367,9 @@ public static CharSequence serialize(Object pobj,boolean asInstance,boolean asJs
 			return String.valueOf((double)pobj);
 		}
 	}else{
+		if(Character.class==clazz){
+			return "\""+ toJsonStandard(String.valueOf((char)pobj))+'"';
+		}
 		if(Boolean.class==clazz){
 			return '"'+String.valueOf((boolean)pobj)+'"';
 		}
@@ -429,13 +393,17 @@ public static CharSequence serialize(Object pobj,boolean asInstance,boolean asJs
 		}
 	}
 	if(pobj instanceof CharSequence){
-		return '"'+toJsonStandard((CharSequence)pobj).toString()+'"';
+		String str=toJsonStandard(pobj.toString()).toString();
+		if(asJsonValue){
+			return '"'+str+'"';
+		}
+		return '"'+str+'"';
 	}
 	if(pobj instanceof JsonSerializable){
-		if(asJsonValue) {
+		if(asJsonValue){
 			return ((JsonSerializable)pobj).toJsonValue();
 		}
-		return ((JsonSerializable)pobj).toJsonKey();
+		return '"'+toJsonStandard(((JsonSerializable)pobj).toJsonKey()).toString()+'"';
 	}
 	if(clazz.isAnnotation()){
 		if(asJsonValue){

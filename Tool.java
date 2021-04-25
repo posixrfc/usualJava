@@ -1,5 +1,6 @@
 package wcy.usual;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -93,5 +94,55 @@ public static String bit2hex(byte[] bytes)
 		sb.append(hex.length()==1?('0'+hex):hex);
 	}
 	return sb.toString();
+}
+public static String calcAttrName(Method func)
+{
+	String mnm=func.getName();
+	char char1,char2;
+	if(mnm.startsWith("get"))
+	{
+		int mlen=mnm.length();
+		if(3==mlen){
+			return mnm;
+		}
+		char1=mnm.charAt(3);
+		if(4==mlen){
+			if(64<char1&&char1<91){
+				char1=(char)(char1+32);
+			}
+			return String.valueOf((char)(char1));
+		}
+		char2=mnm.charAt(4);
+		if(64<char2&&char2<91){
+			return mnm.substring(3);
+		}
+		if(64<char1&&char1<91){
+			char1=(char)(char1+32);
+		}
+		return char1+mnm.substring(4);
+	}
+	if(mnm.startsWith("is"))
+	{
+		int mlen=mnm.length();
+		if(2==mlen){
+			return mnm;
+		}
+		char1=mnm.charAt(2);
+		if(3==mlen){
+			if(64<char1&&char1<91){
+				char1=(char)(char1+32);
+			}
+			return String.valueOf((char)(char1));
+		}
+		char2=mnm.charAt(3);
+		if(64<char2&&char2<91){
+			return mnm.substring(2);
+		}
+		if(64<char1&&char1<91){
+			char1=(char)(char1+32);
+		}
+		return char1+mnm.substring(3);
+	}
+	return mnm;
 }
 }

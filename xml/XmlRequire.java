@@ -1,4 +1,4 @@
-package wcy.usual.json;
+package wcy.usual.xml;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -10,9 +10,10 @@ import java.lang.annotation.Target;
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({FIELD,METHOD})
-public @interface Require
+public @interface XmlRequire
 {
-boolean value() default true;
-String toJson() default "";
-String toJava() default "";
+abstract boolean value() default true;
+public boolean attr() default false;
+public String toXml() default "";
+public String toJava() default "";
 }
