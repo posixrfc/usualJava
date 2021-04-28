@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import wcy.usual.NotFinal;
 import wcy.usual.Tool;
 
 import java.util.Set;
@@ -214,10 +213,10 @@ protected static CharSequence serializeObject(Object pobj)
 	}else{
 		lclass=pobj.getClass();
 	}
-	NotFinal nofinal=null;
+	JsonNotFinal nofinal=null;
 	do{
 		getMembers(allValidMds,allIgnoreMds,allValidFds,allIgnoreFds,lclass,!isclass);
-		nofinal=lclass.getDeclaredAnnotation(NotFinal.class);
+		nofinal=lclass.getDeclaredAnnotation(JsonNotFinal.class);
 		lclass=lclass.getSuperclass();
 	}while(null!=lclass && (Object.class!=lclass || null!=nofinal));
 	List<String> mnms=new ArrayList<String>(allValidMds.size()),fnms=new ArrayList<String>(allValidFds.size());

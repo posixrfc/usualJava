@@ -6,13 +6,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import wcy.usual.NotFinal;
 import wcy.usual.Tool;
 import wcy.usual.json.JsonRequire;
 
@@ -221,10 +221,10 @@ protected static CharSequence serializeObject(Object pobj,CharSequence tag)
 	}else{
 		lclass=pobj.getClass();
 	}
-	NotFinal nofinal=null;
+	XmlNotFinal nofinal=null;
 	do{
 		getMembers(allValidMds,allIgnoreMds,allValidFds,allIgnoreFds,lclass,!isclass);
-		nofinal=lclass.getDeclaredAnnotation(NotFinal.class);
+		nofinal=lclass.getDeclaredAnnotation(XmlNotFinal.class);
 		lclass=lclass.getSuperclass();
 	}while(null!=lclass && (Object.class!=lclass || null!=nofinal));
 	List<String> mnms=new ArrayList<String>(allValidMds.size()),fnms=new ArrayList<String>(allValidFds.size());
@@ -237,7 +237,7 @@ protected static CharSequence serializeObject(Object pobj,CharSequence tag)
 		}else if(require.toXml().length()==0){
 			mnms.add(Tool.calcAttrName(md));
 		}else{
-			mnms.add(toXmlStandard(require.toXml()).toString());
+			mnms.add(txt2xml(require.toXml()).toString());
 		}
 	}
 	for(int i=0,len=allValidFds.size();i!=len;i++)
@@ -249,7 +249,7 @@ protected static CharSequence serializeObject(Object pobj,CharSequence tag)
 		}else if(require.toXml().length()==0){
 			fnms.add(fd.getName());
 		}else{
-			fnms.add(toXmlStandard(require.toXml()).toString());
+			fnms.add(txt2xml(require.toXml()).toString());
 		}
 	}
 	/*for(int j=0,jlen=allValidFds.size();j!=jlen;j++)
@@ -381,7 +381,7 @@ public static CharSequence serialize(Object pobj,CharSequence tag,boolean instan
 	clazz=pobj.getClass();
 	if(xmlValue){
 		if(Character.class==clazz){
-			return wrapTag(toXmlStandard(String.valueOf((char)pobj)),tag);
+			return wrapTag(txt2xml(String.valueOf((char)pobj)),tag);
 		}
 		if(Boolean.class==clazz){
 			return wrapTag(String.valueOf((boolean)pobj),tag);
@@ -406,7 +406,7 @@ public static CharSequence serialize(Object pobj,CharSequence tag,boolean instan
 		}
 	}else{
 		if(Character.class==clazz){
-			return toXmlStandard(String.valueOf((char)pobj));
+			return txt2xml(String.valueOf((char)pobj));
 		}
 		if(Boolean.class==clazz){
 			return String.valueOf((boolean)pobj);
@@ -431,7 +431,7 @@ public static CharSequence serialize(Object pobj,CharSequence tag,boolean instan
 		}
 	}
 	if(pobj instanceof CharSequence){
-		String str=toXmlStandard((CharSequence)pobj).toString();
+		String str=txt2xml((CharSequence)pobj).toString();
 		if(xmlValue){
 			return wrapTag(str,tag);
 		}
@@ -441,7 +441,7 @@ public static CharSequence serialize(Object pobj,CharSequence tag,boolean instan
 		if(xmlValue){
 			return ((XmlSerializable)pobj).toXmlValue();
 		}
-		return toXmlStandard(((XmlSerializable)pobj).toXmlKey());
+		return txt2xml(((XmlSerializable)pobj).toXmlKey());
 	}
 	if(clazz.isAnnotation()){
 		if(xmlValue){
@@ -479,7 +479,38 @@ public static CharSequence serialize(Object pobj,CharSequence tag)
 {
 	return serialize(pobj,tag,true,true);
 }
-public static CharSequence toXmlStandard(CharSequence chars)
+public static CharSequence txt2xml(CharSequence chars)
+{
+	if(null==chars || chars.length()==0){
+		return null;
+	}
+	final int len=chars.length();
+	StringBuilder varstr=new StringBuilder(len);
+	scan:for(int i=0;len!=i;i++)//<![CDATA[<xml>]]>
+	{
+		char chr=chars.charAt(i);
+		switch(chr)
+		{//'->&apos;
+		case '<':
+			varstr.append("&lt;");
+			continue scan;
+		case '>':
+			varstr.append("&gt;");
+			continue scan;
+		case '"':
+			varstr.append("&quot;");
+			continue scan;
+		case ' ':
+			varstr.append("&#32;");
+			continue scan;
+		default:
+			varstr.append(chr);
+			continue scan;
+		}//&->&amp;
+	}
+	return varstr;
+}
+public static CharSequence xml2txt(CharSequence chars)
 {
 	if(null==chars || chars.length()==0){
 		return null;
@@ -508,11 +539,11 @@ public static CharSequence toXmlStandard(CharSequence chars)
 			{"","",""},{"","",""},{"","",""}};
 	final int len=chars.length();
 	StringBuilder varstr=new StringBuilder(len);
-	scan:for(int i=0;len!=i;i++)
+	scan:for(int i=0;len!=i;i++)//<![CDATA[<xml>]]>
 	{
 		char chr=chars.charAt(i);
 		switch(chr)
-		{
+		{//'->&apos;
 		case '<':
 			varstr.append("&lt;");
 			continue scan;
@@ -522,10 +553,13 @@ public static CharSequence toXmlStandard(CharSequence chars)
 		case '"':
 			varstr.append("&quot;");
 			continue scan;
+		case ' ':
+			varstr.append("&#32;");
+			continue scan;
 		default:
 			varstr.append(chr);
 			continue scan;
-		}
+		}//&->&amp;
 	}
 	return varstr;
 }
@@ -533,6 +567,223 @@ protected static CharSequence wrapTag(CharSequence val,CharSequence tag)
 {
 	String key=tag.toString();
 	return '<'+key+'>'+val+"</"+key+'>';
+}
+public static Object parseXml(CharSequence xml)
+{
+	System.out.println(xml);
+	if(null==xml || xml.length()==0){
+		return null;
+	}
+	String tmpstr=xml.toString();
+	StringBuilder varstr=new StringBuilder(xml.length());
+	int xi=0;
+	for(int dati=0,datj;(dati=tmpstr.indexOf("<!--",dati))!=-1;)
+	{
+		if((datj=tmpstr.indexOf("-->",dati+4))==-1){
+			System.out.println("<!--=>not match");
+			return null;
+		}
+		if(xi!=dati){
+			varstr.append(tmpstr.substring(xi,dati));
+		}
+		xi=dati=datj+3;
+	}
+	if(0!=xi){
+		if(tmpstr.length()!=xi){
+			varstr.append(tmpstr.substring(xi));
+		}
+		xml=varstr;
+	}
+	System.out.println(xml);
+	tmpstr=xml.toString();
+	varstr=new StringBuilder(xml.length());
+	xi=0;
+	for(int dati=3,datj;(dati=tmpstr.indexOf("<![CDATA[",dati))!=-1;)
+	{
+		if((datj=tmpstr.indexOf("]]>",dati+9))==-1){
+			System.out.println("CDATA=>not match");
+			return null;
+		}
+		if(xi!=dati){
+			varstr.append(tmpstr.substring(xi,dati));
+		}
+		if(dati+9!=datj){
+			varstr.append(txt2xml(tmpstr.substring(dati+9,datj)));
+		}
+		xi=dati=datj+3;
+	}
+	if(0!=xi){
+		if(tmpstr.length()!=xi){
+			varstr.append(tmpstr.substring(xi));
+		}
+		xml=varstr;
+	}
+	System.out.println(xml);
+	int[] idx=new int[3];
+	idx[0]=xml.length();
+	idx[1]=0;
+	idx[2]=idx[0]-1;
+	Map<String,Object> obj=new HashMap<String,Object>();
+	if(parseXml(obj,xml.toString(),idx)){
+		return obj.size()==0 ? null : obj;
+	}
+	return null;
+}
+protected static boolean parseXml(Map<String,Object> parent,String xml,int[] idx)
+{
+	int vari=idx[2]+1;
+	for(int i=idx[1];i!=vari;i++)
+	{
+		if(Character.isWhitespace(xml.charAt(i))){
+			idx[1]+=1;
+			continue;
+		}
+		break;
+	}
+	if(idx[1]==vari){
+		idx[0]=0;
+		return false;
+	}
+	vari=idx[1]-1;
+	for(int i=idx[2];i!=vari;i--)
+	{
+		if(Character.isWhitespace(xml.charAt(i))){
+			idx[2]-=1;
+			continue;
+		}
+		break;
+	}
+	if(idx[2]==vari){
+		idx[0]=0;
+		return false;
+	}
+	if(xml.charAt(idx[1])!='<' || xml.charAt(idx[2])!='>'){
+		idx[0]=0;
+		return false;
+	}
+	vari=xml.indexOf('>',idx[1]+1);
+	if(idx[1]+1==vari || -1==vari || idx[2]<vari){
+		idx[0]=0;
+		return false;
+	}
+	int[] tidx={idx[0],vari+1,idx[2]};
+	String notag=null;
+	Map<String,Object> curent=new HashMap<String,Object>();
+	if(xml.charAt(vari-1)=='/')
+	{
+		if(xml.charAt(vari-2)==' '){
+			notag=xml.substring(idx[1]+1,vari-2);
+		}else{
+			notag=xml.substring(idx[1]+1,vari-1);
+		}
+		if(notag.indexOf(' ')==-1){
+			return vari==idx[2] ? true : parseXml(parent,xml,tidx);
+		}
+		String[] kvs=notag.split(" ");
+		putMultiVal(parent,xml2txt(kvs[0]).toString(),curent);
+		for(int i=1;kvs.length!=i;i++)
+		{
+			String[] kv=kvs[i].split("=");
+			putMultiVal(curent,xml2txt(kv[0]).toString(),xml2txt(kv[1].substring(1,kv[1].length()-1)));
+		}
+		return vari==idx[2] ? true : parseXml(parent,xml,tidx);
+	}
+	if(xml.charAt(vari-1)==' '){
+		notag=xml.substring(idx[1]+1,vari-1);
+	}else{
+		notag=xml.substring(idx[1]+1,vari);
+	}
+	String tag=notag;
+	if(notag.indexOf(' ')!=-1)
+	{
+		String[] kvs=notag.split(" ");
+		tag=kvs[0];
+		for(int i=1;kvs.length!=i;i++)
+		{
+			String[] kv=kvs[i].split("=");
+			putMultiVal(curent,xml2txt(kv[0]).toString(),xml2txt(kv[1].substring(1,kv[1].length()-1)));
+		}
+		putMultiVal(parent,xml2txt(tag).toString(),curent);
+	}
+	if(idx[2]==vari+tag.length()+3){
+		return xml.substring(vari+1,idx[2]+1).equals("</"+tag+'>');
+	}
+	if(idx[2]<vari+tag.length()+3){
+		return false;
+	}
+	idx[1]=vari+1;
+	vari=xml.indexOf("</"+tag+'>',idx[1]);
+	if(-1==vari || idx[2]<vari+tag.length()+2){
+		return false;
+	}
+	if(idx[1]==vari){
+		tidx[1]=vari+tag.length()+3;
+		return idx[2]==vari+tag.length()+2 ? true : parseXml(parent,xml,tidx);
+	}
+	int cnti=0;
+	for(int tmp=vari-tag.length()-2,loci;((tmp=xml.lastIndexOf('<'+tag,tmp))!=-1) && idx[1]<=tmp;)
+	{
+		vari=loci=vari+tag.length()+3;
+		if(idx[2]<vari+tag.length()+2){
+			return false;
+		}
+		vari=xml.indexOf("</"+tag+'>',vari);
+		if(-1==vari || idx[2]<vari+tag.length()+2){
+			return false;
+		}
+		while(((loci=xml.indexOf('<'+tag,loci))!=-1) && loci<vari){
+			cnti+=1;
+			loci=loci+tag.length()+2;
+		}
+		if(idx[2]==vari+tag.length()+2){
+			if(0==cnti){
+				break;
+			}
+			return false;
+		}
+		tmp=tmp-tag.length()-2;
+	}
+	for(int loci;0!=cnti;)
+	{
+		vari=loci=vari+tag.length()+3;
+		if(idx[2]<vari+tag.length()+2){
+			return false;
+		}
+		vari=xml.indexOf("</"+tag+'>',vari);
+		if(-1==vari || idx[2]<vari+tag.length()+2){
+			return false;
+		}
+		while(((loci=xml.indexOf('<'+tag,loci))!=-1) && loci<vari){
+			cnti+=1;
+			loci=loci+tag.length()+2;
+		}
+		if(idx[2]==vari+tag.length()+2){
+			if(1==cnti){
+				break;
+			}
+			return false;
+		}
+		cnti-=1;
+	}
+	String cnt=xml.substring(idx[1],vari);
+	if(cnt.indexOf('<')==-1){
+		putMultiVal(parent,xml2txt(tag).toString(),xml2txt(cnt));
+	}else{
+		tidx[1]=idx[1];
+		tidx[2]=vari-1;
+		int size=curent.size();
+		if(!parseXml(curent,xml,tidx)){
+			return false;
+		}
+		if(0==size && curent.size()!=0){
+			putMultiVal(parent,xml2txt(tag).toString(),curent);
+		}
+	}
+	if(vari+tag.length()+2==idx[2]){
+		return true;
+	}
+	idx[1]=vari+tag.length()+3;
+	return parseXml(parent,xml,idx);
 }
 @SuppressWarnings("unchecked")
 public static void putMultiVal(Map<String,Object> container,String key,Object val)
@@ -550,10 +801,6 @@ public static void putMultiVal(Map<String,Object> container,String key,Object va
 	list.add(tmp);
 	list.add(val);
 	container.put(key,list);
-}
-public static Object parseXml(CharSequence xml)
-{
-	return null;
 }
 protected XmlSerializer(){}
 }
