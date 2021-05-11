@@ -1,4 +1,4 @@
-package wcy.usual.xml;
+package wcy.usual.codec.json;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,4 +7,4 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PACKAGE,ElementType.TYPE})
-public @interface XmlNotFinal{}
+public @interface JsonNotFinal{}

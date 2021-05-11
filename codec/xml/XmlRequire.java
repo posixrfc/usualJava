@@ -1,4 +1,4 @@
-package wcy.usual.xml;
+package wcy.usual.codec.xml;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;

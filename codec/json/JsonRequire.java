@@ -1,4 +1,4 @@
-package wcy.usual.json;
+package wcy.usual.codec.json;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;

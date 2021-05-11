@@ -1,4 +1,4 @@
-package wcy.usual.xml;
+package wcy.usual.codec.xml;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -13,8 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import wcy.usual.Tool;
-import wcy.usual.json.JsonRequire;
+import wcy.usual.codec.Codec;
 
 public final class XmlSerializer
 {
@@ -48,7 +47,6 @@ protected static CharSequence serializeArray(Object parr,CharSequence tag)
 }
 protected static CharSequence serializeAnnotation(Object pclass,CharSequence tag)
 {
-	final StringBuilder jsonBuilder=new StringBuilder();
 	return null;
 }
 protected static CharSequence serializeMap(Map<?,?> pmap,CharSequence tag)
@@ -137,12 +135,12 @@ protected static void getMembers(List<Method> validMds,List<Method> elideMds,Lis
 				}
 			}
 			for(Method limd:elideMds){
-				if(Tool.calcAttrName(limd).equals(fname)){
+				if(Codec.calcAttrName(limd).equals(fname)){
 					continue loopfds;
 				}
 			}
 			for(Method limd:validMds){
-				if(Tool.calcAttrName(limd).equals(fname)){
+				if(Codec.calcAttrName(limd).equals(fname)){
 					continue loopfds;
 				}
 			}
@@ -177,7 +175,7 @@ protected static void getMembers(List<Method> validMds,List<Method> elideMds,Lis
 		if(Modifier.isAbstract(sign)){
 			continue;
 		}
-		final String mname=ltmd.getName(),fname=Tool.calcAttrName(ltmd);
+		final String mname=ltmd.getName(),fname=Codec.calcAttrName(ltmd);
 		for(Field lifd:elideFds){
 			if(lifd.getName().equals(fname)){//已经被忽略,不重复忽略
 				continue loopmd;
@@ -233,9 +231,9 @@ protected static CharSequence serializeObject(Object pobj,CharSequence tag)
 		Method md=allValidMds.get(i);
 		XmlRequire require=md.getAnnotation(XmlRequire.class);
 		if(null==require){
-			mnms.add(Tool.calcAttrName(md));
+			mnms.add(Codec.calcAttrName(md));
 		}else if(require.toXml().length()==0){
-			mnms.add(Tool.calcAttrName(md));
+			mnms.add(Codec.calcAttrName(md));
 		}else{
 			mnms.add(txt2xml(require.toXml()).toString());
 		}
@@ -439,7 +437,7 @@ public static CharSequence serialize(Object pobj,CharSequence tag,boolean instan
 	}
 	if(pobj instanceof XmlSerializable){
 		if(xmlValue){
-			return ((XmlSerializable)pobj).toXmlValue();
+			return ((XmlSerializable)pobj).toXmlVal();
 		}
 		return txt2xml(((XmlSerializable)pobj).toXmlKey());
 	}
@@ -1698,7 +1696,7 @@ protected static boolean parseXml(Map<CharSequence,Object> parent,String xml,int
 			return false;
 		}
 		if(curent.size()!=0){
-			putMultiVal(parent,xml2txt(tag),curent);
+			Codec.putMultiVal(parent,xml2txt(tag),curent);
 		}
 		return vari==idx[2] ? true : parseXml(parent,xml,tidx);
 	}
@@ -1707,7 +1705,7 @@ protected static boolean parseXml(Map<CharSequence,Object> parent,String xml,int
 		return false;
 	}
 	if(curent.size()!=0){
-		putMultiVal(parent,xml2txt(tag),curent);
+		Codec.putMultiVal(parent,xml2txt(tag),curent);
 	}
 	if(idx[2]==vari+tag.length()+3){
 		return xml.substring(vari+1,idx[2]+1).equals("</"+tag+'>');
@@ -1793,7 +1791,7 @@ protected static boolean parseXml(Map<CharSequence,Object> parent,String xml,int
 	}
 	String cnt=xml.substring(idx[1],vari);
 	if(cnt.indexOf('<')==-1){
-		putMultiVal(parent,xml2txt(tag).toString(),xml2txt(cnt));
+		Codec.putMultiVal(parent,xml2txt(tag).toString(),xml2txt(cnt));
 	}else{
 		tidx[1]=idx[1];
 		tidx[2]=vari-1;
@@ -1802,7 +1800,7 @@ protected static boolean parseXml(Map<CharSequence,Object> parent,String xml,int
 			return false;
 		}
 		if(0==size && curent.size()!=0){
-			putMultiVal(parent,xml2txt(tag).toString(),curent);
+			Codec.putMultiVal(parent,xml2txt(tag).toString(),curent);
 		}
 	}
 	if(vari+tag.length()+2==idx[2]){
@@ -1852,7 +1850,7 @@ public static CharSequence parseAttrsVal(Map<CharSequence,Object> attr,CharSeque
 				return null;
 			}
 			if(j!=i+1){
-				putMultiVal(attr,xml2txt(k),xml2txt(str.substring(i+1,j)));
+				Codec.putMultiVal(attr,xml2txt(k),xml2txt(str.substring(i+1,j)));
 			}
 			k=null;
 			i=j+1;
@@ -1868,23 +1866,6 @@ public static CharSequence parseAttrsVal(Map<CharSequence,Object> attr,CharSeque
 		}
 	}
 	return null==tag ? src : tag;
-}
-@SuppressWarnings("unchecked")
-public static void putMultiVal(Map<CharSequence,Object> container,CharSequence key,Object val)
-{
-	Object tmp=container.get(key);
-	if(null==tmp){
-		container.put(key,val);
-		return;
-	}
-	if(tmp instanceof List){
-		((List<Object>)tmp).add(val);
-		return;
-	}
-	List<Object> list=new ArrayList<Object>();
-	list.add(tmp);
-	list.add(val);
-	container.put(key,list);
 }
 protected XmlSerializer(){}
 }

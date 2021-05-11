@@ -1,4 +1,4 @@
-package wcy.usual.json;
+package wcy.usual.codec.json;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import wcy.usual.Tool;
+import wcy.usual.codec.Codec;
 
 import java.util.Set;
 
@@ -129,12 +129,12 @@ protected static void getMembers(List<Method> validMds,List<Method> elideMds,Lis
 				}
 			}
 			for(Method limd:elideMds){
-				if(Tool.calcAttrName(limd).equals(fname)){
+				if(Codec.calcAttrName(limd).equals(fname)){
 					continue loopfds;
 				}
 			}
 			for(Method limd:validMds){
-				if(Tool.calcAttrName(limd).equals(fname)){
+				if(Codec.calcAttrName(limd).equals(fname)){
 					continue loopfds;
 				}
 			}
@@ -169,7 +169,7 @@ protected static void getMembers(List<Method> validMds,List<Method> elideMds,Lis
 		if(Modifier.isAbstract(sign)){
 			continue;
 		}
-		final String mname=ltmd.getName(),fname=Tool.calcAttrName(ltmd);
+		final String mname=ltmd.getName(),fname=Codec.calcAttrName(ltmd);
 		for(Field lifd:elideFds){
 			if(lifd.getName().equals(fname)){//已经被忽略,不重复忽略
 				continue loopmd;
@@ -225,11 +225,11 @@ protected static CharSequence serializeObject(Object pobj)
 		Method md=allValidMds.get(i);
 		JsonRequire require=md.getAnnotation(JsonRequire.class);
 		if(null==require){
-			mnms.add(Tool.calcAttrName(md));
+			mnms.add(Codec.calcAttrName(md));
 		}else if(require.toJson().length()==0){
-			mnms.add(Tool.calcAttrName(md));
+			mnms.add(Codec.calcAttrName(md));
 		}else{
-			mnms.add(toJsonStandard(require.toJson()).toString());
+			mnms.add(txt2json(require.toJson()).toString());
 		}
 	}
 	for(int i=0,len=allValidFds.size();i!=len;i++)
@@ -241,7 +241,7 @@ protected static CharSequence serializeObject(Object pobj)
 		}else if(require.toJson().length()==0){
 			fnms.add(fd.getName());
 		}else{
-			fnms.add(toJsonStandard(require.toJson()).toString());
+			fnms.add(txt2json(require.toJson()).toString());
 		}
 	}
 	/*for(int j=0,jlen=allValidFds.size();j!=jlen;j++)
@@ -278,7 +278,7 @@ protected static CharSequence serializeObject(Object pobj)
 		if(null==chars){
 			continue;
 		}
-		varstr.append('"').append(toJsonStandard(mnms.get(i))).append("\":").append(chars).append(',');
+		varstr.append('"').append(txt2json(mnms.get(i))).append("\":").append(chars).append(',');
 	}
 	for(int i=0,len=allValidFds.size();i!=len;i++)
 	{
@@ -297,7 +297,7 @@ protected static CharSequence serializeObject(Object pobj)
 		if(null==chars){
 			continue;
 		}
-		varstr.append('"').append(toJsonStandard(fnms.get(i))).append("\":").append(chars).append(',');
+		varstr.append('"').append(txt2json(fnms.get(i))).append("\":").append(chars).append(',');
 	}
 	if(varstr.length()==1){
 		return null;
@@ -342,7 +342,7 @@ public static CharSequence serialize(Object pobj,boolean asInstance,boolean asJs
 	clazz=pobj.getClass();
 	if(asJsonValue){
 		if(Character.class==clazz){
-			return "\""+ toJsonStandard(String.valueOf((char)pobj))+'"';
+			return "\""+ txt2json(String.valueOf((char)pobj))+'"';
 		}
 		if(Boolean.class==clazz){
 			return String.valueOf((boolean)pobj);
@@ -367,7 +367,7 @@ public static CharSequence serialize(Object pobj,boolean asInstance,boolean asJs
 		}
 	}else{
 		if(Character.class==clazz){
-			return "\""+ toJsonStandard(String.valueOf((char)pobj))+'"';
+			return "\""+ txt2json(String.valueOf((char)pobj))+'"';
 		}
 		if(Boolean.class==clazz){
 			return '"'+String.valueOf((boolean)pobj)+'"';
@@ -392,7 +392,7 @@ public static CharSequence serialize(Object pobj,boolean asInstance,boolean asJs
 		}
 	}
 	if(pobj instanceof CharSequence){
-		String str=toJsonStandard(pobj.toString()).toString();
+		String str=txt2json(pobj.toString()).toString();
 		if(asJsonValue){
 			return '"'+str+'"';
 		}
@@ -400,9 +400,9 @@ public static CharSequence serialize(Object pobj,boolean asInstance,boolean asJs
 	}
 	if(pobj instanceof JsonSerializable){
 		if(asJsonValue){
-			return ((JsonSerializable)pobj).toJsonValue();
+			return ((JsonSerializable)pobj).toJsonVal();
 		}
-		return '"'+toJsonStandard(((JsonSerializable)pobj).toJsonKey()).toString()+'"';
+		return '"'+txt2json(((JsonSerializable)pobj).toJsonKey()).toString()+'"';
 	}
 	if(clazz.isAnnotation()){
 		if(asJsonValue){
@@ -437,7 +437,7 @@ public static CharSequence serialize(Object pobj)
 {
 	return serialize(pobj,true,true);
 }
-public static CharSequence toJsonStandard(CharSequence chars)
+public static CharSequence txt2json(CharSequence chars)
 {
 	StringBuilder hexBuilder=new StringBuilder();
 	String hexString=null;

@@ -1,8 +1,8 @@
-package wcy.usual.xml;
+package wcy.usual.codec.xml;
 
 public interface XmlSerializable
 {
-public default CharSequence toXmlValue()
+public default CharSequence toXmlVal()
 {
 	return '"'+XmlSerializer.txt2xml(toString()).toString()+'"';
 }
