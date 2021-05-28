@@ -13,11 +13,9 @@ import java.util.Map;
 public interface RDBCP
 {
 public default void initDBCP(){};
+public default void killDBCP(){};
 
-public default void purgeDBCP(){};
-
-public abstract Connection openRdbConnect();
-
+public abstract Connection initRdbConnect();
 public abstract void killRdbConnect(Connection link);
 
 public default void killResource(Statement stmt,ResultSet rst)
@@ -40,7 +38,7 @@ public default void killResource(Statement stmt,ResultSet rst)
 
 public default String getScalar(String sql)
 {
-	Connection link=openRdbConnect();
+	Connection link=initRdbConnect();
 	PreparedStatement stmt=null;
 	ResultSet rset=null;
 	String str=null;
@@ -60,7 +58,7 @@ public default String getScalar(String sql)
 
 public default List<String> getCol(String sql)
 {
-	Connection link=openRdbConnect();
+	Connection link=initRdbConnect();
 	PreparedStatement stmt=null;
 	ResultSet rset=null;
 	List<String> res=new ArrayList<String>();
@@ -80,7 +78,7 @@ public default List<String> getCol(String sql)
 }
 public default Map<String,String> getRow(String sql,String...alias)
 {
-	Connection link=openRdbConnect();
+	Connection link=initRdbConnect();
 	PreparedStatement stmt=null;
 	ResultSet rset=null;
 	Map<String,String> row=null;
@@ -106,7 +104,7 @@ public default Map<String,String> getRow(String sql,String...alias)
 }
 public default List<Map<String,String>> getTab(String sql,String...alias)
 {
-	Connection link=openRdbConnect();
+	Connection link=initRdbConnect();
 	PreparedStatement stmt=null;
 	ResultSet rset=null;
 	List<Map<String,String>> res=new ArrayList<Map<String,String>>();
