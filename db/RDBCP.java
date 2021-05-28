@@ -12,12 +12,13 @@ import java.util.Map;
 
 public interface RDBCP
 {
-public void initDBCP(String host,int port,String user,String pass,String dbname,String driver);
-public void purgeDBCP();
+public default void initDBCP(){};
 
-public Connection openRdbConnect();
+public default void purgeDBCP(){};
 
-public void killRdbConnect(Connection link);
+public abstract Connection openRdbConnect();
+
+public abstract void killRdbConnect(Connection link);
 
 public default void killResource(Statement stmt,ResultSet rst)
 {
@@ -130,6 +131,7 @@ public default List<Map<String,String>> getTab(String sql,String...alias)
 	}
 	return res.size()==0 ? null : res;
 }
+}
 /*
 jdbc:sqlserver://127.0.0.1:1433;databaseName=tdb;user=sa;password=w3c
 com.microsoft.sqlserver.jdbc.SQLServerDriver
@@ -140,4 +142,3 @@ org.postgresql.Driver
 jdbc:mariadb://127.0.0.1:3306/tdb?useUnicode=true&characterEncoding=utf8
 org.mariadb.jdbc.Driver
 */
-}
