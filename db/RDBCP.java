@@ -16,7 +16,7 @@ public default void initDBCP(){};
 public default void killDBCP(){};
 
 public abstract Connection initRdbConnect();
-public abstract void killRdbConnect(Connection link);
+public default void killRdbConnect(Connection link){};
 
 public default void killResource(Statement stmt,ResultSet rst)
 {

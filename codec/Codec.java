@@ -5,8 +5,13 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +20,49 @@ import wcy.usual.codec.xml.XmlSerializer;
 
 public final class Codec
 {
+public static Map<CharSequence,Object> uri2obj(CharSequence queryString)
+{
+	Map<CharSequence,Object> res=new HashMap<CharSequence,Object>();
+	String[] kvs=queryString.toString().split("&");
+	try{
+		for(String kv:kvs){
+			String[] pair=kv.split("=");
+			putMultiVal(res,URLDecoder.decode(pair[0],"UTF-8"),URLDecoder.decode(pair[1],"UTF-8"));
+		}
+	}catch(UnsupportedEncodingException e){
+		e.printStackTrace(System.err);
+	}
+	return res;
+}
+public static CharSequence obj2uri(Map<CharSequence,Object> parameter)
+{
+	StringBuilder queryString=new StringBuilder();
+	try{
+		for(Map.Entry<CharSequence,Object> e:parameter.entrySet()){
+			String enck=URLEncoder.encode(e.getKey().toString(),"UTF-8"),encv;
+			Object value=e.getValue();
+			if(value.getClass().isArray()){
+				final int len=Array.getLength(value);
+				for(int i=0;i!=len;i++){
+					encv=URLEncoder.encode(Array.get(value,i).toString(),"UTF-8");
+					queryString.append('&').append(enck).append('=').append(encv);
+				}
+			}else if(value instanceof Iterable){
+				for(Object val:(Iterable<?>)value){
+					encv=URLEncoder.encode(val.toString(),"UTF-8");
+					queryString.append('&').append(enck).append('=').append(encv);
+				}
+			}else{
+				encv=URLEncoder.encode(value.toString(),"UTF-8");
+				queryString.append('&').append(enck).append('=').append(encv);
+			}
+		}
+		queryString.deleteCharAt(0);
+	}catch(UnsupportedEncodingException e){
+		e.printStackTrace(System.err);
+	}
+	return queryString;
+}
 public static CharSequence obj2xml(Object any,CharSequence tag)
 {
 	return XmlSerializer.serialize(any,tag,true,true);
