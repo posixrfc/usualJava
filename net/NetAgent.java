@@ -1,6 +1,7 @@
 package wcy.usual.net;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Map;
@@ -42,20 +43,23 @@ public static final Object http(CharSequence type,CharSequence url,CharSequence 
 		}
 		hcon.setDoInput(true);
 		if(!"GET".contentEquals(type) && null!=body){
-			hcon.setDoOutput(true);
-			hcon.setChunkedStreamingMode(0);
+			hcon.setDoOutput(true);//hcon.setChunkedStreamingMode(0);
 		}
 		hcon.connect();
 		if(!"GET".contentEquals(type) && null!=body){
-			hcon.getOutputStream().write(body.toString().getBytes(enc));
+			OutputStream nos=hcon.getOutputStream();
+			nos.write(body.toString().getBytes(enc));
+			nos.flush();
+			nos.close();
 		}
-		if(hcon.getContentLength()==0){
-			hcon.disconnect();
-			return null;
-		}//hcon.getInputStream().transferTo(null);
-		byte[] bytes=new byte[hcon.getContentLength()];
-		hcon.getInputStream().read(bytes);
+		hcon.getResponseCode();
 		mime=hcon.getContentType();
+		byte[] bytes=new byte[hcon.getContentLength()];
+		if(hcon.getErrorStream()==null){
+			hcon.getInputStream().read(bytes);
+		}else{
+			hcon.getErrorStream().read(bytes);
+		}
 		hcon.disconnect();
 		enc="UTF-8";
 		if(null==mime){
@@ -121,7 +125,7 @@ public static final Object http(CharSequence type,CharSequence url,Map<CharSeque
 		return http(type,url,(CharSequence)null,header);
 	case "text/html":
 		return http(type,url,(CharSequence)null,header);
-	case "application/json":
+	case "application/json"://System.out.println(paramOrBody);
 		return http(type,url,Codec.obj2json(paramOrBody),header);
 	case "text/xml":
 	case "application/xml":

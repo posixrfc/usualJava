@@ -1,18 +1,23 @@
 package wcy.usual;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.UUID;
 
 public final class Tool
 {
-public static String randomCharSecquence(CharSequence src)
+public static String newUUID()
+{
+	return UUID.randomUUID().toString().replace("-","");
+}
+public static String newRandNumStr(int len)
+{
+	String r=String.valueOf(System.currentTimeMillis());
+	while(r.length()<len){
+		r+=String.valueOf(Math.random()).substring(2);
+	}
+	return r.substring(0,len);
+}
+public static String randChars(CharSequence src)
 {
 	StringBuilder sb = new StringBuilder(src);
 	final int sl = sb.length();
@@ -26,7 +31,7 @@ public static String randomCharSecquence(CharSequence src)
 	}
 	return new String(cs);
 }
-public static String getRandomString(String source, final int length)
+public static String getRandStr(String source, final int length)
 {
 	if (1 > length){
 		return null;
@@ -71,28 +76,5 @@ public static <T> String arrJoin(T[] arr,String join)
 		sb.delete(0, join.length());
 	}
 	return sb.length()==0?null:sb.toString();
-}
-public static byte[] hex2bit(String hex)
-{
-	int len=hex.length();
-	byte bytes[]=new byte[len/2];
-	for(int i=0;len!=i;i+=2){
-		short twobit=(short)Short.parseShort(hex.substring(i, i+2), 16);
-		if(127<twobit) {
-			twobit-=256;
-		}
-		bytes[i/2]=(byte)twobit;
-	}
-	return bytes;
-}
-public static String bit2hex(byte[] bytes)
-{
-	StringBuilder sb=new StringBuilder(bytes.length<<1);
-	String hex;
-	for(int idx=0;idx!=bytes.length;idx++) {
-		hex=Integer.toHexString(bytes[idx] & 0xff);
-		sb.append(hex.length()==1?('0'+hex):hex);
-	}
-	return sb.toString();
 }
 }

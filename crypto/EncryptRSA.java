@@ -20,39 +20,36 @@ import java.security.interfaces.RSAPublicKey;
 
 import javax.crypto.Cipher;
 
-import wcy.usual.Tool;
+import wcy.usual.codec.Codec;
 
 public final class EncryptRSA
 {
 public final boolean hasError;
 	
-public final RSAPrivateKey privateKey;
-public final RSAPublicKey publicKey;
-	
-public final String publicFile = "/public.key";
-public final String privateFile = "/private.key";
+public final RSAPrivateKey priKey;
+public final RSAPublicKey pubKey;
 	
 public byte[] encrypt(byte[] srcBytes)
 {
-	if (srcBytes == null || srcBytes.length == 0) {
+	if(null==srcBytes || 0==srcBytes.length){
 		return null;
 	}
 	Cipher cipher;
-	try {
-		cipher = Cipher.getInstance("RSA");
-	} catch (Exception e) {
+	try{
+		cipher=Cipher.getInstance("RSA");
+	}catch(Exception e){
 		e.printStackTrace(System.err);
 		return null;
 	}
-	try {
-		cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-	} catch (InvalidKeyException e) {
+	try{
+		cipher.init(Cipher.ENCRYPT_MODE,pubKey);
+	}catch(InvalidKeyException e){
 		e.printStackTrace(System.err);
 		return null;
 	}
 	byte[] resultBytes;
 	try {
-		resultBytes = cipher.doFinal(srcBytes);
+		resultBytes=cipher.doFinal(srcBytes);
 	} catch (Exception e) {
 		e.printStackTrace(System.err);
 		return null;
@@ -61,45 +58,42 @@ public byte[] encrypt(byte[] srcBytes)
 }
 public String encrypt(String srcString)
 {
-	if (null == srcString || srcString.length() == 0) {
+	if(null==srcString || srcString.length()==0){
 		return null;
 	}
 	byte[] bytes;
-	try {
-		bytes = srcString.getBytes("UTF-8");
-	} catch (UnsupportedEncodingException e) {
+	try{
+		bytes=srcString.getBytes("UTF-8");
+	}catch(UnsupportedEncodingException e){
 		e.printStackTrace(System.err);
 		return null;
 	}
-	bytes = encrypt(bytes);//加密RSA
-	if (bytes == null) {
-		return null;
-	}
-	return Tool.bit2hex(bytes);
+	bytes=encrypt(bytes);//加密RSA
+	return null==bytes ? null : Codec.bit2hex(bytes);
 }
 	
 public byte[] decrypt(byte[] srcBytes)
 {
-	if (srcBytes == null || srcBytes.length == 0) {
+	if (null==srcBytes || 0==srcBytes.length){
 		return null;
 	}
 	Cipher cipher;
-	try {
-		cipher = Cipher.getInstance("RSA");
-	} catch (Exception e) {
+	try{
+		cipher=Cipher.getInstance("RSA");
+	}catch(Exception e){
 		e.printStackTrace(System.err);
 		return null;
 	}
-	try {
-		cipher.init(Cipher.DECRYPT_MODE, privateKey);
-	} catch (InvalidKeyException e) {
+	try{
+		cipher.init(Cipher.DECRYPT_MODE,priKey);
+	}catch (InvalidKeyException e){
 		e.printStackTrace(System.err);
 		return null;
 	}
 	byte[] resultBytes;
 	try {
-		resultBytes = cipher.doFinal(srcBytes);
-	} catch (Exception e) {
+		resultBytes=cipher.doFinal(srcBytes);
+	}catch(Exception e){
 		e.printStackTrace(System.err);
 		return null;
 	}
@@ -107,128 +101,90 @@ public byte[] decrypt(byte[] srcBytes)
 }
 public String decrypt(String srcString)
 {
-	if (null == srcString || srcString.length() == 0) {
+	if (null==srcString || srcString.length()==0) {
 		return null;
 	}
-	byte[] bytes = Tool.hex2bit(srcString);
-	bytes = decrypt(bytes);//解密RSA
-	if (bytes == null) {
+	byte[] bytes=Codec.hex2bit(srcString);
+	bytes=decrypt(bytes);//解密RSA
+	if(null==bytes){
 		return null;
 	}
-	try {
-		return new String(bytes, "UTF-8");
-	} catch (UnsupportedEncodingException e) {
+	try{
+		return new String(bytes,"UTF-8");
+	}catch(UnsupportedEncodingException e){
 		e.printStackTrace(System.err);
 	}
 	return null;
 }
 
-public EncryptRSA(String folder)
+public EncryptRSA(CharSequence publicFile,CharSequence privateFile)
 {
-	if (folder == null || folder.length() == 0)
+	File pubKeyFile=new File(publicFile.toString());
+	File priKeyFile=new File(privateFile.toString());
+	if(pubKeyFile.exists() && priKeyFile.exists())
 	{
-		hasError = true;
-		publicKey = null;
-		privateKey = null;
-		return;
-	}
-	File dir = new File(folder);
-	if (dir.exists())
-	{
-		if (dir.isFile())
-		{
-			if (!dir.delete())
-			{
-				hasError = true;
-				publicKey = null;
-				privateKey = null;
-				return;
-			}
-			if (!dir.mkdirs())
-			{
-				hasError = true;
-				publicKey = null;
-				privateKey = null;
-				return;
-			}
+		pubKey=(RSAPublicKey)loadKey(pubKeyFile);
+        if(null==pubKey)
+        {
+        	hasError=true;
+        	priKey=null;
+    		return;
 		}
+        priKey=(RSAPrivateKey)loadKey(priKeyFile);
+        if (null==priKey)
+        {
+        	hasError=true;
+        	return;
+		}
+        hasError=false;
 	}
 	else
 	{
-		if (!dir.mkdirs())
-		{
-			hasError = true;
-			publicKey = null;
-			privateKey = null;
-			return;
-		}
-	}
-	File pubKeyFile = new File(dir, publicFile);
-	File priKeyFile = new File(dir, privateFile);
-	if (pubKeyFile.exists() && priKeyFile.exists()) // 有key，现在读取
-	{
-        publicKey = (RSAPublicKey) loadKey(pubKeyFile);
-        if (publicKey == null)
+        if(pubKeyFile.exists())
         {
-        	hasError = true;
-        	privateKey = null;
-    		return;
-		}
-        privateKey = (RSAPrivateKey) loadKey(priKeyFile);
-        if (null == privateKey)
-        {
-        	hasError = true;
-        	return;
-		}
-        hasError = false;
-	}
-	else // 没有key，现在生成
-	{
-        if (pubKeyFile.exists())
-        {
-        	if (!pubKeyFile.delete())
+        	if(!pubKeyFile.delete())
         	{
-        		hasError = true;
-        		publicKey = null;
-        		privateKey = null;
+        		hasError=true;
+        		pubKey=null;
+        		priKey=null;
         		return;
 			}
     	}
-        if (priKeyFile.exists())
+        if(priKeyFile.exists())
         {
-			if (!priKeyFile.delete())
+			if(!priKeyFile.delete())
 			{
-				hasError = true;
-        		publicKey = null;
-        		privateKey = null;
+				hasError=true;
+				pubKey=null;
+				priKey=null;
         		return;
 			}
 		}
-        KeyPair keyPair = null;
+        KeyPair keyPair=null;
     	try
     	{
-    		KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("RSA");
+    		KeyPairGenerator keyPairGen=KeyPairGenerator.getInstance("RSA");
     		keyPairGen.initialize(1024);
-    		keyPair = keyPairGen.generateKeyPair();
+    		keyPair=keyPairGen.generateKeyPair();
     	}
-    	catch (NoSuchAlgorithmException e)
+    	catch(NoSuchAlgorithmException e)
     	{
     		e.printStackTrace(System.err);
-    		hasError = true;
-    		publicKey = null;
-    		privateKey = null;
+    		hasError=true;
+    		pubKey=null;
+    		priKey=null;
     		return;
     	}
-        privateKey = (RSAPrivateKey) keyPair.getPrivate();
-        publicKey = (RSAPublicKey) keyPair.getPublic();
-        if (!storageKey(publicKey, pubKeyFile))
+    	priKey=(RSAPrivateKey)keyPair.getPrivate();
+    	pubKey=(RSAPublicKey)keyPair.getPublic();
+        if(!storageKey(pubKey,pubKeyFile))
         {
-        	hasError = true;
+        	hasError=true;
         	return;
 		}
-        if (!storageKey(privateKey, priKeyFile))
+        if (!storageKey(priKey,priKeyFile))
         {
-            hasError = true;
+            hasError=true;
         	return;
 		}
         hasError = false;
@@ -238,38 +194,38 @@ public EncryptRSA(String folder)
 protected Serializable loadKey(File keyFile)
 {
 	InputStream in;
-	try {
-		in = new FileInputStream(keyFile);
-	} catch (FileNotFoundException e) {
+	try{
+		in=new FileInputStream(keyFile);
+	}catch(FileNotFoundException e){
 		e.printStackTrace(System.err);
 		return null;
 	}
 	ObjectInputStream ois;
-	try {
-		ois = new ObjectInputStream(in);
-	} catch (IOException e) {
-		try {
+	try{
+		ois=new ObjectInputStream(in);
+	}catch(IOException e){
+		try{
 			in.close();
-		} catch (IOException e2) {
+		}catch (IOException e2){
 			e2.printStackTrace(System.err);
 		}
 		e.printStackTrace(System.err);
 		return null;
 	}
-	Serializable key = null;
-	try {
-		key = (Serializable) ois.readObject();
-	} catch (Exception e) {
+	Serializable key=null;
+	try{
+		key=(Serializable)ois.readObject();
+	}catch(Exception e){
 		e.printStackTrace(System.err);
-	} finally {
-		try {
+	}finally{
+		try{
 			in.close();
-		} catch (IOException e) {
+		}catch(IOException e){
 			e.printStackTrace(System.err);
 		}
-		try {
+		try{
 			ois.close();
-		} catch (IOException e) {
+		}catch(IOException e){
 			e.printStackTrace(System.err);
 		}
 	}
@@ -277,52 +233,52 @@ protected Serializable loadKey(File keyFile)
 }
 protected boolean storageKey(Serializable key, File keyFile)
 {   
-	try {
+	try{
 		keyFile.createNewFile();
-	} catch (IOException e) {
+	}catch(IOException e){
 		e.printStackTrace(System.err);
 		return false;
 	}
 	OutputStream out;
 	try {
-		out = new FileOutputStream(keyFile);
-	} catch (FileNotFoundException e) {
+		out=new FileOutputStream(keyFile);
+	} catch(FileNotFoundException e){
 		e.printStackTrace(System.err);
 		keyFile.delete();
 		return false;
 	}
 	ObjectOutputStream oos;
-	try {
-		oos = new ObjectOutputStream(out);
-	} catch (IOException e) {
-		try {
+	try{
+		oos=new ObjectOutputStream(out);
+	}catch(IOException e){
+		try{
 			out.close();
-		} catch (Exception e2) {
+		}catch (Exception e2){
 			e2.printStackTrace(System.err);
 		}
 		keyFile.delete();
 		e.printStackTrace(System.err);
 		return false;
 	}
-	boolean ret = true;
-	try {
+	boolean ret=true;
+	try{
 		oos.writeObject(key);
 		oos.flush();
-	} catch (IOException e) {
+	}catch(IOException e){
 		keyFile.delete();
 		e.printStackTrace(System.err);
-		ret = false;
-	} finally {
-		try {
+		ret=false;
+	}finally{
+		try{
 			out.close();
-		} catch (IOException e2) {
-			ret = false;
+		}catch(IOException e2){
+			ret=false;
 			e2.printStackTrace(System.err);
 		}
-		try {
+		try{
 			oos.close();
-		} catch (IOException e2) {
-			ret = false;
+		}catch (IOException e2){
+			ret=false;
 			e2.printStackTrace(System.err);
 		}
 	}

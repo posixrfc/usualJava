@@ -3,10 +3,7 @@ package wcy.usual.crypto;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Base64;
-
-import wcy.usual.Tool;
+import wcy.usual.codec.Codec;
 
 public final class EncryptDigest
 {
@@ -72,7 +69,7 @@ public final class EncryptDigest
 			return null;
 		}
 		bytes = digest.digest(bytes);
-		return Tool.bit2hex(bytes);
+		return Codec.bit2hex(bytes);
 	}
 	protected static String getEncAlgorithms(byte type)
 	{
