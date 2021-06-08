@@ -10,7 +10,7 @@ import wcy.usual.codec.Codec;
 
 public final class NetAgent
 {
-public static final Object http(CharSequence type,CharSequence url,CharSequence body,Map<CharSequence,CharSequence> header)
+public static final Object http(CharSequence type,CharSequence url,CharSequence body,Map<CharSequence,CharSequence> header,ResChecker checker)
 {
 	Object res=null;
 	String mime="application/x-www-form-urlencoded",enc="UTF-8";
@@ -56,9 +56,12 @@ public static final Object http(CharSequence type,CharSequence url,CharSequence 
 		mime=hcon.getContentType();
 		byte[] bytes=new byte[hcon.getContentLength()];
 		if(hcon.getErrorStream()==null){
-			hcon.getInputStream().read(bytes);
+			hcon.getInputStream().read(bytes);//bytes=hcon.getInputStream().readAllBytes();
 		}else{
-			hcon.getErrorStream().read(bytes);
+			hcon.getErrorStream().read(bytes);//bytes=hcon.getErrorStream().readAllBytes();
+		}
+		if(null!=checker){
+			bytes=checker.check(hcon,bytes);
 		}
 		hcon.disconnect();
 		enc="UTF-8";
@@ -76,6 +79,8 @@ public static final Object http(CharSequence type,CharSequence url,CharSequence 
 	}catch(IOException e){
 		e.printStackTrace(System.err);
 	}
+	System.out.println("raw");
+	System.out.println(res);
 	switch(mime)
 	{
 	case "text/plain":
@@ -97,14 +102,15 @@ public static final Object http(CharSequence type,CharSequence url,CharSequence 
 		return res;
 	}
 }
-public static final Object http(CharSequence type,CharSequence url,Map<CharSequence,Object> paramOrBody,Map<CharSequence,CharSequence> header)
+public static final Object http(CharSequence type,CharSequence url,Map<CharSequence,Object> paramOrBody,Map<CharSequence,CharSequence> header,ResChecker checker)
 {
 	if(null==paramOrBody || paramOrBody.size()==0){
-		return http(type,url,(CharSequence)null,header);
+		return http(type,url,(CharSequence)null,header,checker);
 	}
 	if("GET".contentEquals(type)){
-		return http(type,url.toString()+'?'+Codec.obj2uri(paramOrBody),(CharSequence)null,header);
+		return http(type,url.toString()+'?'+Codec.obj2uri(paramOrBody),(CharSequence)null,header,checker);
 	}
+	@SuppressWarnings("unused")
 	String mime="application/x-www-form-urlencoded",enc="UTF-8";
 	if(null!=header && header.size()!=0){
 		for(Map.Entry<CharSequence,CharSequence> e:header.entrySet()){
@@ -122,22 +128,22 @@ public static final Object http(CharSequence type,CharSequence url,Map<CharSeque
 	switch(mime)
 	{
 	case "text/plain":
-		return http(type,url,(CharSequence)null,header);
+		return http(type,url,(CharSequence)null,header,checker);
 	case "text/html":
-		return http(type,url,(CharSequence)null,header);
-	case "application/json"://System.out.println(paramOrBody);
-		return http(type,url,Codec.obj2json(paramOrBody),header);
+		return http(type,url,(CharSequence)null,header,checker);
+	case "application/json":
+		return http(type,url,Codec.obj2json(paramOrBody),header,checker);
 	case "text/xml":
 	case "application/xml":
-		return http(type,url,Codec.obj2xml(paramOrBody,"xml"),header);
+		return http(type,url,Codec.obj2xml(paramOrBody,"xml"),header,checker);
 	case "application/x-www-form-urlencoded":
-		return http(type,url,Codec.obj2uri(paramOrBody),header);
+		return http(type,url,Codec.obj2uri(paramOrBody),header,checker);
 	case "multipart/form-data":
-		return http(type,url,(CharSequence)null,header);
+		return http(type,url,(CharSequence)null,header,checker);
 	case "application/octet-stream":
-		return http(type,url,(CharSequence)null,header);
+		return http(type,url,(CharSequence)null,header,checker);
 	default:
-		return http(type,url,(CharSequence)null,header);
+		return http(type,url,(CharSequence)null,header,checker);
 	}
 }
 private NetAgent(){}

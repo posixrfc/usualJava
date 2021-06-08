@@ -32,7 +32,7 @@ import wcy.usual.codec.xml.XmlSerializer;
 public final class HttpRqst extends Object implements HttpServletRequest
 {
 public HttpRqst(HttpServletRequest servletRequest) throws ServletException, IOException{
-	this.servletRequest=Objects.requireNonNull(servletRequest);
+	this.sreq=Objects.requireNonNull(servletRequest);
 	enctype=servletRequest.getContentType();
 	switch(servletRequest.getMethod())
 	{
@@ -75,7 +75,7 @@ public final boolean mobile;
 public final String enctype;
 public Cookie getCookie(String name)
 {
-	Cookie[] cks=servletRequest.getCookies();
+	Cookie[] cks=sreq.getCookies();
 	if(null==cks || 0==cks.length){
 		return null;
 	}
@@ -96,295 +96,295 @@ public boolean setSharedSessionValue(String arg0, String arg1)
 }
 public String getFullContextPath()
 {
-	String fullPath=servletRequest.getScheme()+"://"+servletRequest.getServerName();
-	if(servletRequest.getScheme().equals("http")){
-		if(servletRequest.getServerPort()!=80){
-			fullPath=fullPath+':'+servletRequest.getServerPort();
+	String fullPath=sreq.getScheme()+"://"+sreq.getServerName();
+	if(sreq.getScheme().equals("http")){
+		if(sreq.getServerPort()!=80){
+			fullPath=fullPath+':'+sreq.getServerPort();
 		}
 	}else{//https
-		if(servletRequest.getServerPort()!=443){
-			fullPath=fullPath+':'+servletRequest.getServerPort();
+		if(sreq.getServerPort()!=443){
+			fullPath=fullPath+':'+sreq.getServerPort();
 		}
 	}
-	return fullPath+servletRequest.getContextPath();//http://localhost:8080/esb
+	return fullPath+sreq.getContextPath();//http://localhost:8080/esb
 }
 @Override
 public AsyncContext getAsyncContext() {
-	return servletRequest.getAsyncContext();
+	return sreq.getAsyncContext();
 }
 @Override
 public Object getAttribute(String arg0) {
-	return servletRequest.getAttribute(arg0);
+	return sreq.getAttribute(arg0);
 }
 @Override
 public Enumeration<String> getAttributeNames() {
-	return servletRequest.getAttributeNames();
+	return sreq.getAttributeNames();
 }
 @Override
 public String getCharacterEncoding() {
-	return servletRequest.getCharacterEncoding();
+	return sreq.getCharacterEncoding();
 }
 @Override
 public int getContentLength() {
-	return servletRequest.getContentLength();
+	return sreq.getContentLength();
 }
 @Override
 public long getContentLengthLong() {
-	return servletRequest.getContentLengthLong();
+	return sreq.getContentLengthLong();
 }
 @Override
 public String getContentType() {
-	return servletRequest.getContentType();
+	return sreq.getContentType();
 }
 @Override
 public DispatcherType getDispatcherType() {
-	return servletRequest.getDispatcherType();
+	return sreq.getDispatcherType();
 }
 @Override
 public ServletInputStream getInputStream() throws IOException {
-	return servletRequest.getInputStream();
+	return sreq.getInputStream();
 }
 @Override
 public String getLocalAddr() {
-	return servletRequest.getLocalAddr();
+	return sreq.getLocalAddr();
 }
 @Override
 public String getLocalName() {
-	return servletRequest.getLocalName();
+	return sreq.getLocalName();
 }
 @Override
 public int getLocalPort() {
-	return servletRequest.getLocalPort();
+	return sreq.getLocalPort();
 }
 @Override
 public Locale getLocale() {
-	return servletRequest.getLocale();
+	return sreq.getLocale();
 }
 @Override
 public Enumeration<Locale> getLocales() {
-	return servletRequest.getLocales();
+	return sreq.getLocales();
 }
 @Override
 public String getParameter(String arg0){
-	return servletRequest.getParameter(arg0);
+	return sreq.getParameter(arg0);
 }
 @Override
 public Map<String,String[]> getParameterMap() {
-	return servletRequest.getParameterMap();
+	return sreq.getParameterMap();
 }
 @Override
 public Enumeration<String> getParameterNames() {
-	return servletRequest.getParameterNames();
+	return sreq.getParameterNames();
 }
 @Override
 public String[] getParameterValues(String arg0) {
-	return servletRequest.getParameterValues(arg0);
+	return sreq.getParameterValues(arg0);
 }
 @Override
 public String getProtocol() {
-	return servletRequest.getProtocol();
+	return sreq.getProtocol();
 }
 @Override
 public BufferedReader getReader() throws IOException {
-	return servletRequest.getReader();
+	return sreq.getReader();
 }
 @Deprecated
 @Override
 public String getRealPath(String arg0) {
-	return servletRequest.getRealPath(arg0);
+	return sreq.getRealPath(arg0);
 }
 @Override
 public String getRemoteAddr() {
-	return servletRequest.getRemoteAddr();
+	return sreq.getRemoteAddr();
 }
 @Override
 public String getRemoteHost() {
-	return servletRequest.getRemoteHost();
+	return sreq.getRemoteHost();
 }
 @Override
 public int getRemotePort() {
-	return servletRequest.getRemotePort();
+	return sreq.getRemotePort();
 }
 @Override
 public RequestDispatcher getRequestDispatcher(String arg0) {
-	return servletRequest.getRequestDispatcher(arg0);
+	return sreq.getRequestDispatcher(arg0);
 }
 @Override
 public String getScheme() {
-	return servletRequest.getScheme();
+	return sreq.getScheme();
 }
 @Override
 public String getServerName() {
-	return servletRequest.getServerName();
+	return sreq.getServerName();
 }
 @Override
 public int getServerPort() {
-	return servletRequest.getServerPort();
+	return sreq.getServerPort();
 }
 @Override
 public ServletContext getServletContext() {
-	return servletRequest.getServletContext();
+	return sreq.getServletContext();
 }
 @Override
 public boolean isAsyncStarted() {
-	return servletRequest.isAsyncStarted();
+	return sreq.isAsyncStarted();
 }
 @Override
 public boolean isAsyncSupported() {
-	return servletRequest.isAsyncSupported();
+	return sreq.isAsyncSupported();
 }
 @Override
 public boolean isSecure() {
-	return servletRequest.isSecure();
+	return sreq.isSecure();
 }
 @Override
 public void removeAttribute(String arg0) {
-	servletRequest.removeAttribute(arg0);
+	sreq.removeAttribute(arg0);
 }
 @Override
 public void setAttribute(String arg0, Object arg1) {
-	servletRequest.setAttribute(arg0, arg1);
+	sreq.setAttribute(arg0, arg1);
 }
 @Override
 public void setCharacterEncoding(String arg0) throws UnsupportedEncodingException {
-	servletRequest.setCharacterEncoding(arg0);
+	sreq.setCharacterEncoding(arg0);
 }
 @Override
 public AsyncContext startAsync() throws IllegalStateException {
-	return servletRequest.startAsync();
+	return sreq.startAsync();
 }
 @Override
 public AsyncContext startAsync(ServletRequest arg0, ServletResponse arg1) throws IllegalStateException {
-	return servletRequest.startAsync(arg0, arg1);
+	return sreq.startAsync(arg0, arg1);
 }
 @Override
 public boolean authenticate(HttpServletResponse arg0) throws IOException, ServletException {
-	return servletRequest.authenticate(arg0);
+	return sreq.authenticate(arg0);
 }
 @Override
 public String changeSessionId() {
-	return servletRequest.changeSessionId();
+	return sreq.changeSessionId();
 }
 @Override
 public String getAuthType() {
-	return servletRequest.getAuthType();
+	return sreq.getAuthType();
 }
 @Override
 public String getContextPath() {
-	return servletRequest.getContextPath();
+	return sreq.getContextPath();
 }
 @Override
 public Cookie[] getCookies() {
-	return servletRequest.getCookies();
+	return sreq.getCookies();
 }
 @Override
 public long getDateHeader(String arg0) {
-	return servletRequest.getDateHeader(arg0);
+	return sreq.getDateHeader(arg0);
 }
 @Override
 public String getHeader(String arg0) {
-	return servletRequest.getHeader(arg0);
+	return sreq.getHeader(arg0);
 }
 @Override
 public Enumeration<String> getHeaderNames() {
-	return servletRequest.getHeaderNames();
+	return sreq.getHeaderNames();
 }
 @Override
 public Enumeration<String> getHeaders(String arg0) {
-	return servletRequest.getHeaders(arg0);
+	return sreq.getHeaders(arg0);
 }
 @Override
 public int getIntHeader(String arg0) {
-	return servletRequest.getIntHeader(arg0);
+	return sreq.getIntHeader(arg0);
 }
 @Override
 public String getMethod() {
-	return servletRequest.getMethod();
+	return sreq.getMethod();
 }
 @Override
 public Part getPart(String arg0) throws IOException, ServletException {
-	return servletRequest.getPart(arg0);
+	return sreq.getPart(arg0);
 }
 @Override
 public Collection<Part> getParts() throws IOException, ServletException {
-	return servletRequest.getParts();
+	return sreq.getParts();
 }
 @Override
 public String getPathInfo() {
-	return servletRequest.getPathInfo();
+	return sreq.getPathInfo();
 }
 @Override
 public String getPathTranslated() {
-	return servletRequest.getPathTranslated();
+	return sreq.getPathTranslated();
 }
 @Override
 public String getQueryString() {
-	return servletRequest.getQueryString();
+	return sreq.getQueryString();
 }
 @Override
 public String getRemoteUser() {
-	return servletRequest.getRemoteUser();
+	return sreq.getRemoteUser();
 }
 @Override
 public String getRequestURI() {
-	return servletRequest.getRequestURI();
+	return sreq.getRequestURI();
 }
 @Override
 public StringBuffer getRequestURL() {
-	return servletRequest.getRequestURL();
+	return sreq.getRequestURL();
 }
 @Override
 public String getRequestedSessionId() {
-	return servletRequest.getRequestedSessionId();
+	return sreq.getRequestedSessionId();
 }
 @Override
 public String getServletPath() {
-	return servletRequest.getServletPath();
+	return sreq.getServletPath();
 }
 @Override
 public HttpSession getSession() {
-	return servletRequest.getSession();
+	return sreq.getSession();
 }
 @Override
 public HttpSession getSession(boolean arg0) {
-	return servletRequest.getSession(arg0);
+	return sreq.getSession(arg0);
 }
 @Override
 public Principal getUserPrincipal() {
-	return servletRequest.getUserPrincipal();
+	return sreq.getUserPrincipal();
 }
 @Override
 public boolean isRequestedSessionIdFromCookie() {
-	return servletRequest.isRequestedSessionIdFromCookie();
+	return sreq.isRequestedSessionIdFromCookie();
 }
 @Override
 public boolean isRequestedSessionIdFromURL() {
-	return servletRequest.isRequestedSessionIdFromURL();
+	return sreq.isRequestedSessionIdFromURL();
 }
 @Deprecated
 @Override
 public boolean isRequestedSessionIdFromUrl() {
-	return servletRequest.isRequestedSessionIdFromUrl();
+	return sreq.isRequestedSessionIdFromUrl();
 }
 @Override
 public boolean isRequestedSessionIdValid(){
-	return servletRequest.isRequestedSessionIdValid();
+	return sreq.isRequestedSessionIdValid();
 }
 @Override
 public boolean isUserInRole(String arg0){
-	return servletRequest.isUserInRole(arg0);
+	return sreq.isUserInRole(arg0);
 }
 @Override
 public void login(String arg0, String arg1) throws ServletException{
-	servletRequest.login(arg0, arg1);
+	sreq.login(arg0, arg1);
 }
 @Override
 public void logout() throws ServletException {
-	servletRequest.logout();
+	sreq.logout();
 }
 @Override
 public <T extends HttpUpgradeHandler> T upgrade(Class<T> arg0) throws IOException, ServletException{
-	return servletRequest.upgrade(arg0);
+	return sreq.upgrade(arg0);
 }
 public Object getReqObj(CharSequence ognl)
 {
@@ -394,11 +394,11 @@ public Object getReqObj(CharSequence ognl)
 		}
 		return rdat;
 	}
-	String qsval=servletRequest.getParameter(ognl.toString());
+	String qsval=sreq.getParameter(ognl.toString());
 	if(null==rstr || null==rdat){
 		return qsval;
 	}
-	switch(servletRequest.getMethod())
+	switch(sreq.getMethod())
 	{
 	case "GET":
 		return qsval;
@@ -431,20 +431,32 @@ public Object getReqObj(CharSequence ognl)
 	}
 	return qsval;
 }
-public String getReqTxt(){
+public String getReqTxt()
+{
 	return rstr;
 }
-protected String readText() throws IOException, ServletException{
-	servletRequest.setCharacterEncoding("UTF-8");
-	BufferedReader br=servletRequest.getReader();
-	StringBuilder buf=new StringBuilder();
-	String str;
-	while((str=br.readLine())!=null){
-		buf.append(str);
-	}//System.out.println(buf);
-	return rstr=buf.length()==0 ? null : buf.toString();
+protected String readText() throws IOException, ServletException
+{
+	String mime=sreq.getContentType(),enc="UTF-8";
+	if(null==mime){
+		mime="text/plain";
+	}else{
+		int idx=mime.lastIndexOf('=');
+		if(-1!=idx){
+			enc=mime.substring(idx+1);
+			idx=mime.indexOf(';');
+			mime=mime.substring(0,idx);
+		}
+	}
+	sreq.setCharacterEncoding(enc);
+	byte[] bytes=new byte[sreq.getContentLength()];
+	sreq.getInputStream().read(bytes);//byte[] bytes=sreq.getInputStream().readAllBytes();
+	if(null==bytes || 0==bytes.length){
+		return null;
+	}
+	return new String(bytes,enc);
 }
 protected String rstr;
 protected Object rdat;
-private final HttpServletRequest servletRequest;
+private final HttpServletRequest sreq;
 }
