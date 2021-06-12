@@ -79,8 +79,6 @@ public static final Object http(CharSequence type,CharSequence url,CharSequence 
 	}catch(IOException e){
 		e.printStackTrace(System.err);
 	}
-	System.out.println("raw");
-	System.out.println(res);
 	switch(mime)
 	{
 	case "text/plain":

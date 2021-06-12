@@ -1,5 +1,6 @@
 package wcy.usual;
 
+import java.util.Iterator;
 import java.util.Random;
 import java.util.UUID;
 
@@ -47,33 +48,35 @@ public static String getRandStr(String source, final int length)
 	}
 	return new String(ret);
 }
-public static <T> String arrJoin(T[] arr,String join)
+public static <T> String joinList(Iterable<T> its,CharSequence join)
 {
-	if(null==arr || 0==arr.length){
-		return null;
-	}
+	Iterator<T> itr=its.iterator();
 	StringBuilder sb=new StringBuilder();
 	if(null==join || join.length()==0){
-		for(int i=0;i!=arr.length;i++){
-			if(null==arr[i]){
+		while(itr.hasNext()){
+			T o=itr.next();
+			if(null==o){
 				continue;
 			}
-			if((arr[i] instanceof CharSequence) && ((CharSequence)arr[i]).length()==0) {
+			if((o instanceof CharSequence) && ((CharSequence)o).length()==0){
 				continue;
 			}
-			sb.append(arr[i].toString());
+			sb.append(o.toString());
 		}
 	}else{
-		for(int i=0;i!=arr.length;i++){
-			if(null==arr[i]) {
+		while(itr.hasNext()){
+			T o=itr.next();
+			if(null==o){
 				continue;
 			}
-			if((arr[i] instanceof CharSequence) && ((CharSequence)arr[i]).length()==0) {
+			if((o instanceof CharSequence) && ((CharSequence)o).length()==0){
 				continue;
 			}
-			sb.append(join).append(arr[i].toString());
+			sb.append(join).append(o.toString());
 		}
-		sb.delete(0, join.length());
+		if(sb.length()!=0){
+			sb.delete(0,join.length());
+		}
 	}
 	return sb.length()==0?null:sb.toString();
 }
