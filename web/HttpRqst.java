@@ -31,7 +31,8 @@ import wcy.usual.codec.xml.XmlSerializer;
 
 public final class HttpRqst extends Object implements HttpServletRequest
 {
-public HttpRqst(HttpServletRequest servletRequest) throws ServletException, IOException{
+public HttpRqst(HttpServletRequest servletRequest) throws ServletException, IOException
+{
 	this.sreq=Objects.requireNonNull(servletRequest);
 	enctype=servletRequest.getContentType();
 	switch(servletRequest.getMethod())
@@ -454,7 +455,8 @@ protected String readText() throws IOException, ServletException
 	if(null==bytes || 0==bytes.length){
 		return null;
 	}
-	return new String(bytes,enc);
+	rstr=new String(bytes,enc);
+	return rstr;
 }
 protected String rstr;
 protected Object rdat;

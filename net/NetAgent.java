@@ -100,13 +100,13 @@ public static final Object http(CharSequence type,CharSequence url,CharSequence 
 		return res;
 	}
 }
-public static final Object http(CharSequence type,CharSequence url,Map<CharSequence,Object> paramOrBody,Map<CharSequence,CharSequence> header,ResChecker checker)
+public static final Object http(CharSequence type,CharSequence url,Map<CharSequence,Object> payload,Map<CharSequence,CharSequence> header,ResChecker checker)
 {
-	if(null==paramOrBody || paramOrBody.size()==0){
+	if(null==payload || payload.size()==0){
 		return http(type,url,(CharSequence)null,header,checker);
 	}
 	if("GET".contentEquals(type)){
-		return http(type,url.toString()+'?'+Codec.obj2uri(paramOrBody),(CharSequence)null,header,checker);
+		return http(type,url.toString()+'?'+Codec.obj2uri(payload),(CharSequence)null,header,checker);
 	}
 	@SuppressWarnings("unused")
 	String mime="application/x-www-form-urlencoded",enc="UTF-8";
@@ -130,12 +130,12 @@ public static final Object http(CharSequence type,CharSequence url,Map<CharSeque
 	case "text/html":
 		return http(type,url,(CharSequence)null,header,checker);
 	case "application/json":
-		return http(type,url,Codec.obj2json(paramOrBody),header,checker);
+		return http(type,url,Codec.obj2json(payload),header,checker);
 	case "text/xml":
 	case "application/xml":
-		return http(type,url,Codec.obj2xml(paramOrBody,"xml"),header,checker);
+		return http(type,url,Codec.obj2xml(payload,"xml"),header,checker);
 	case "application/x-www-form-urlencoded":
-		return http(type,url,Codec.obj2uri(paramOrBody),header,checker);
+		return http(type,url,Codec.obj2uri(payload),header,checker);
 	case "multipart/form-data":
 		return http(type,url,(CharSequence)null,header,checker);
 	case "application/octet-stream":
