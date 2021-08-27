@@ -54,6 +54,9 @@ public HttpRqst(HttpServletRequest servletRequest) throws ServletException, IOEx
 			break;
 		case "application/json":
 			rdat=JsonSerializer.parseJson(readText());
+			if(null==rdat){
+				enctype=null;
+			}
 			break;
 		case "text/plain":
 			rdat=readText();
@@ -61,6 +64,9 @@ public HttpRqst(HttpServletRequest servletRequest) throws ServletException, IOEx
 		case "text/xml":
 		case "application/xml":
 			rdat=XmlSerializer.parseXml(readText());
+			if(null==rdat){
+				enctype=null;
+			}
 			break;
 		case "multipart/form-data":
 			break;
@@ -73,7 +79,10 @@ public HttpRqst(HttpServletRequest servletRequest) throws ServletException, IOEx
 	mobile=(null!=client&&client.matches("^.+[^a-zA-Z0-9]((iPhone)|(iPad)|(Android))[^a-zA-Z0-9].+$"));
 }
 public final boolean mobile;
-public final String enctype;
+protected String enctype;
+public String getMimeType(){
+	return enctype;
+}
 public Cookie getCookie(String name)
 {
 	Cookie[] cks=sreq.getCookies();
