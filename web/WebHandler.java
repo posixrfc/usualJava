@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface WebHandler
 {
-public abstract byte method() default 127;
+public abstract byte method() default NONE;
 
 public abstract String[] pattern() default {};
 public abstract String[] session() default {};
@@ -25,4 +25,6 @@ public static final byte DELETE=8;
 public static final byte HEAD=16;
 public static final byte TRACE=32;
 public static final byte OPTIONS=64;
+public static final byte ALL=127;
+public static final byte NONE=0;
 }
