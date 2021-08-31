@@ -187,46 +187,76 @@ public void doFilter(ServletRequest sreq,ServletResponse srsp,FilterChain chain)
 		WebCore.noEligibleForbidden(orsp);
 		return;
 	}
+	byte reqlx=handle.method();
+	if(WebHandler.NONE==reqlx){
+		handle=target.getClass().getDeclaredAnnotation(WebHandler.class);
+		if(null==handle){
+			handle=target.getClass().getAnnotation(WebHandler.class);
+		}
+		if(null!=handle){
+			reqlx=handle.method();
+		}
+	}
+	if(WebHandler.NONE==reqlx){
+		for(int i=pkgall.size()-1,l=-1;i!=l;i--){
+			Package opkg=pkgall.get(i);
+			handle=opkg.getDeclaredAnnotation(WebHandler.class);
+			if(null==handle){
+				handle=opkg.getAnnotation(WebHandler.class);
+			}
+			if(null==handle){
+				continue;
+			}
+			if(handle.method()!=WebHandler.NONE){
+				reqlx=handle.method();
+				break;
+			}
+		}
+	}
+	if(WebHandler.NONE==reqlx){
+		WebCore.noEligibleMethod(orsp);
+		return;
+	}
 	switch(oreq.getMethod())
 	{
 	case "GET":
-		if((handle.method()&WebHandler.GET)==0){
+		if((reqlx&WebHandler.GET)==0){
 			WebCore.noEligibleMethod(orsp);
 			return;
 		}
 		break;
 	case "POST":
-		if((handle.method()&WebHandler.POST)==0){
+		if((reqlx&WebHandler.POST)==0){
 			WebCore.noEligibleMethod(orsp);
 			return;
 		}
 		break;
 	case "PUT":
-		if((handle.method()&WebHandler.PUT)==0){
+		if((reqlx&WebHandler.PUT)==0){
 			WebCore.noEligibleMethod(orsp);
 			return;
 		}
 		break;
 	case "DELETE":
-		if((handle.method()&WebHandler.DELETE)==0){
+		if((reqlx&WebHandler.DELETE)==0){
 			WebCore.noEligibleMethod(orsp);
 			return;
 		}
 		break;
 	case "HEAD":
-		if((handle.method()&WebHandler.HEAD)==0){
+		if((reqlx&WebHandler.HEAD)==0){
 			WebCore.noEligibleMethod(orsp);
 			return;
 		}
 		break;
 	case "TRACE":
-		if((handle.method()&WebHandler.TRACE)==0){
+		if((reqlx&WebHandler.TRACE)==0){
 			WebCore.noEligibleMethod(orsp);
 			return;
 		}
 		break;
 	case "OPTIONS":
-		if((handle.method()&WebHandler.OPTIONS)==0){
+		if((reqlx&WebHandler.OPTIONS)==0){
 			WebCore.noEligibleMethod(orsp);
 			return;
 		}
@@ -234,6 +264,10 @@ public void doFilter(ServletRequest sreq,ServletResponse srsp,FilterChain chain)
 	default:
 		WebCore.noEligibleMethod(orsp);
 		return;
+	}
+	handle=action.getDeclaredAnnotation(WebHandler.class);
+	if(null==handle){
+		handle=action.getAnnotation(WebHandler.class);
 	}
 	String[] sign=handle.session();
 	if(null==sign || sign.length==0){
