@@ -33,7 +33,7 @@ public void doFilter(ServletRequest sreq,ServletResponse srsp,FilterChain chain)
 		doNextFilter(oreq,orsp,chain);
 		return;
 	case ERROR:
-		WebCore.noEligibleRoutine(orsp);
+		WebCore.noEligibleRoutine(oreq,orsp);
 		return;
 	}
 	if(!oreq.getMethod().equals("GET")){
@@ -59,22 +59,22 @@ public void doFilter(ServletRequest sreq,ServletResponse srsp,FilterChain chain)
 			}
 			int idx=i+1;
 			if(idx==WebCore.signinuri.length){
-				WebCore.noEligibleResource(orsp);
+				WebCore.noEligibleResource(oreq,orsp);
 				return;
 			}
 			if(null==WebCore.checker){
 				HttpSession sess=oreq.getSession(false);
 				if(null==sess){
-					WebCore.noEligibleResource(orsp);
+					WebCore.noEligibleResource(oreq,orsp);
 					return;
 				}
 				if(sess.getAttribute(WebCore.signinuri[idx])==null){
-					WebCore.noEligibleResource(orsp);
+					WebCore.noEligibleResource(oreq,orsp);
 					return;
 				}
 			}else{
 				if(WebCore.checker.hasError(oreq,WebCore.signinuri[idx])){
-					WebCore.noEligibleResource(orsp);
+					WebCore.noEligibleResource(oreq,orsp);
 					return;
 				}
 			}
@@ -117,7 +117,7 @@ public void doFilter(ServletRequest sreq,ServletResponse srsp,FilterChain chain)
 			if(urirgx.length()==0){
 				continue uriloop;
 			}else{
-				WebCore.noEligibleRegular(orsp);
+				WebCore.noEligibleRegular(oreq,orsp);
 				return;
 			}
 		}
@@ -176,7 +176,7 @@ public void doFilter(ServletRequest sreq,ServletResponse srsp,FilterChain chain)
 			if(urirgx.length()==0){
 				continue uriloop;
 			}else{
-				WebCore.noEligibleRegular(orsp);
+				WebCore.noEligibleRegular(oreq,orsp);
 				return;
 			}
 		}else{
@@ -184,7 +184,7 @@ public void doFilter(ServletRequest sreq,ServletResponse srsp,FilterChain chain)
 		}
 	}
 	if(null==target){
-		WebCore.noEligibleForbidden(orsp);
+		WebCore.noEligibleForbidden(oreq,orsp);
 		return;
 	}
 	byte reqlx=handle.method();
@@ -214,55 +214,63 @@ public void doFilter(ServletRequest sreq,ServletResponse srsp,FilterChain chain)
 		}
 	}
 	if(WebHandler.NONE==reqlx){
-		WebCore.noEligibleMethod(orsp);
+		WebCore.noEligibleMethod(oreq,orsp);
 		return;
 	}
 	switch(oreq.getMethod())
 	{
 	case "GET":
 		if((reqlx&WebHandler.GET)==0){
-			WebCore.noEligibleMethod(orsp);
+			WebCore.noEligibleMethod(oreq,orsp);
 			return;
 		}
 		break;
 	case "POST":
 		if((reqlx&WebHandler.POST)==0){
-			WebCore.noEligibleMethod(orsp);
+			WebCore.noEligibleMethod(oreq,orsp);
 			return;
 		}
 		break;
 	case "PUT":
 		if((reqlx&WebHandler.PUT)==0){
-			WebCore.noEligibleMethod(orsp);
+			WebCore.noEligibleMethod(oreq,orsp);
 			return;
 		}
 		break;
 	case "DELETE":
 		if((reqlx&WebHandler.DELETE)==0){
-			WebCore.noEligibleMethod(orsp);
+			WebCore.noEligibleMethod(oreq,orsp);
 			return;
 		}
 		break;
 	case "HEAD":
 		if((reqlx&WebHandler.HEAD)==0){
-			WebCore.noEligibleMethod(orsp);
+			WebCore.noEligibleMethod(oreq,orsp);
 			return;
 		}
 		break;
 	case "TRACE":
 		if((reqlx&WebHandler.TRACE)==0){
-			WebCore.noEligibleMethod(orsp);
+			WebCore.noEligibleMethod(oreq,orsp);
 			return;
 		}
 		break;
 	case "OPTIONS":
 		if((reqlx&WebHandler.OPTIONS)==0){
-			WebCore.noEligibleMethod(orsp);
+			WebCore.noEligibleMethod(oreq,orsp);
 			return;
 		}
 		break;
 	default:
-		WebCore.noEligibleMethod(orsp);
+		WebCore.noEligibleMethod(oreq,orsp);
+		return;
+	}
+	WebCore.setCommonHeader(oreq,orsp);
+	if(null!=WebCore.preater){
+		WebCore.preater.setDefaultHeader(oreq,orsp);
+	}
+	if(oreq.getMethod().contentEquals("OPTIONS")){
+		executeHandler(oreq,orsp,target,action);
 		return;
 	}
 	handle=action.getDeclaredAnnotation(WebHandler.class);
@@ -294,10 +302,6 @@ public void doFilter(ServletRequest sreq,ServletResponse srsp,FilterChain chain)
 				break;
 			}
 		}
-	}
-	WebCore.setCommonHeader(orsp);
-	if(null!=WebCore.preater){
-		WebCore.preater.setDefaultHeader(orsp);
 	}
 	if(null==sign || sign.length==0){
 		executeHandler(oreq,orsp,target,action);
@@ -332,24 +336,23 @@ public void doFilter(ServletRequest sreq,ServletResponse srsp,FilterChain chain)
 		executeHandler(oreq,orsp,target,action);
 		return;
 	}
-	WebCore.noEligibleAuthorized(orsp);
+	WebCore.noEligibleAuthorized(oreq,orsp);
 }
 protected void executeHandler(HttpServletRequest hreq,HttpServletResponse hrsp,Object target,Method action) throws IOException
 {
 	HttpRqst nreq=null;
-	HttpRsps nrsp=null;
+	HttpRsps nrsp=new HttpRsps(hrsp);
 	if(!(hreq instanceof HttpRqst)){
 		try{
 			nreq=new HttpRqst(hreq);
 		}catch(ServletException|IOException e){
 			e.printStackTrace(System.out);
-			WebCore.noEligibleRoutine(hrsp);
+			WebCore.noEligibleRoutine(hreq,hrsp);
 			return;
 		}
-		nrsp=new HttpRsps(hrsp);
 	}
 	if(nreq.getReqTxt()!=null && nreq.getReqTxt().length()!=0 && nreq.getMimeType()==null){
-		WebCore.noEligibleFormat(nrsp);
+		WebCore.noEligibleFormat(hreq,nrsp);
 		return;
 	}
 	int flag=action.getModifiers();
@@ -366,15 +369,16 @@ protected void executeHandler(HttpServletRequest hreq,HttpServletResponse hrsp,O
 	}catch(Exception e){
 		e.printStackTrace(System.out);
 	}
-	WebCore.noEligibleRoutine(nrsp);
+	WebCore.noEligibleRoutine(hreq,nrsp);
 }
 protected void doNextFilter(HttpServletRequest hreq,HttpServletResponse hrsp,FilterChain chain) throws IOException,ServletException
 {
 	try{
-		chain.doFilter(new HttpRqst(hreq),new HttpRsps(hrsp));
+		HttpRsps nrsp=new HttpRsps(hrsp);
+		chain.doFilter(new HttpRqst(hreq),nrsp);
 	}catch(Exception e){
 		e.printStackTrace(System.out);
-		WebCore.noEligibleRoutine(hrsp);
+		WebCore.noEligibleRoutine(hreq,hrsp);
 		return;
 	}
 	switch(hrsp.getStatus())
@@ -382,10 +386,10 @@ protected void doNextFilter(HttpServletRequest hreq,HttpServletResponse hrsp,Fil
 	case 200:
 		return;
 	case 404:
-		WebCore.noEligibleResource(hrsp);
+		WebCore.noEligibleResource(hreq,hrsp);
 		break;
 	case 500:
-		WebCore.noEligibleRoutine(hrsp);
+		WebCore.noEligibleRoutine(hreq,hrsp);
 	}
 }
 @Override

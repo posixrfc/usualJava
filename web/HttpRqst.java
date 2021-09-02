@@ -29,7 +29,7 @@ import wcy.usual.codec.json.JsonSerializer;
 import wcy.usual.ognl.Ognls;
 import wcy.usual.codec.xml.XmlSerializer;
 
-public final class HttpRqst extends Object implements HttpServletRequest
+public class HttpRqst implements HttpServletRequest
 {
 public HttpRqst(HttpServletRequest servletRequest) throws ServletException, IOException
 {
@@ -45,7 +45,7 @@ public HttpRqst(HttpServletRequest servletRequest) throws ServletException, IOEx
 	case "HEAD":
 	case "OPTIONS":
 	case "TRACE":
-		if(null==enctype && enctype.length()==0){
+		if(null==enctype || enctype.length()==0){
 			break;
 		}
 		switch(enctype)
@@ -84,7 +84,7 @@ public String getMimeType(){
 	return enctype;
 }
 public Cookie getCookie(String name)
-{
+{//Cookie: JSESSIONID=29FE88855D58210A67D5DA84392F902C; cknm=ckval; cknm1=ckval1; cknm2=ckval2
 	Cookie[] cks=sreq.getCookies();
 	if(null==cks || 0==cks.length){
 		return null;
@@ -95,17 +95,14 @@ public Cookie getCookie(String name)
 		}
 	}
 	return null;
-}//servletRequest.getSession().getAttribute(null);servletRequest.getSession().setAttribute(null, null);
-public Object getSharedSessionValue(String userid,String arg0)
-{
+}
+public Object getSharedSessionValue(String userid,String arg0){
 	return null;
 }
-public boolean setSharedSessionValue(String arg0, String arg1)
-{
+public boolean setSharedSessionValue(String arg0, String arg1){
 	return true;
 }
-public String getFullContextPath()
-{
+public String getFullContextPath(){
 	String fullPath=sreq.getScheme()+"://"+sreq.getServerName();
 	if(sreq.getScheme().equals("http")){
 		if(sreq.getServerPort()!=80){
@@ -119,59 +116,59 @@ public String getFullContextPath()
 	return fullPath+sreq.getContextPath();//http://localhost:8080/esb
 }
 @Override
-public AsyncContext getAsyncContext() {
+public AsyncContext getAsyncContext(){
 	return sreq.getAsyncContext();
 }
 @Override
-public Object getAttribute(String arg0) {
+public Object getAttribute(String arg0){
 	return sreq.getAttribute(arg0);
 }
 @Override
-public Enumeration<String> getAttributeNames() {
+public Enumeration<String> getAttributeNames(){
 	return sreq.getAttributeNames();
 }
 @Override
-public String getCharacterEncoding() {
+public String getCharacterEncoding(){
 	return sreq.getCharacterEncoding();
 }
 @Override
-public int getContentLength() {
+public int getContentLength(){
 	return sreq.getContentLength();
 }
 @Override
-public long getContentLengthLong() {
+public long getContentLengthLong(){
 	return sreq.getContentLengthLong();
 }
 @Override
-public String getContentType() {
+public String getContentType(){
 	return sreq.getContentType();
 }
 @Override
-public DispatcherType getDispatcherType() {
+public DispatcherType getDispatcherType(){
 	return sreq.getDispatcherType();
 }
 @Override
-public ServletInputStream getInputStream() throws IOException {
+public ServletInputStream getInputStream() throws IOException{
 	return sreq.getInputStream();
 }
 @Override
-public String getLocalAddr() {
+public String getLocalAddr(){
 	return sreq.getLocalAddr();
 }
 @Override
-public String getLocalName() {
+public String getLocalName(){
 	return sreq.getLocalName();
 }
 @Override
-public int getLocalPort() {
+public int getLocalPort(){
 	return sreq.getLocalPort();
 }
 @Override
-public Locale getLocale() {
+public Locale getLocale(){
 	return sreq.getLocale();
 }
 @Override
-public Enumeration<Locale> getLocales() {
+public Enumeration<Locale> getLocales(){
 	return sreq.getLocales();
 }
 @Override
@@ -179,201 +176,201 @@ public String getParameter(String arg0){
 	return sreq.getParameter(arg0);
 }
 @Override
-public Map<String,String[]> getParameterMap() {
+public Map<String,String[]> getParameterMap(){
 	return sreq.getParameterMap();
 }
 @Override
-public Enumeration<String> getParameterNames() {
+public Enumeration<String> getParameterNames(){
 	return sreq.getParameterNames();
 }
 @Override
-public String[] getParameterValues(String arg0) {
+public String[] getParameterValues(String arg0){
 	return sreq.getParameterValues(arg0);
 }
 @Override
-public String getProtocol() {
+public String getProtocol(){
 	return sreq.getProtocol();
 }
 @Override
-public BufferedReader getReader() throws IOException {
+public BufferedReader getReader() throws IOException{
 	return sreq.getReader();
 }
 @Deprecated
 @Override
-public String getRealPath(String arg0) {
+public String getRealPath(String arg0){
 	return sreq.getRealPath(arg0);
 }
 @Override
-public String getRemoteAddr() {
+public String getRemoteAddr(){
 	return sreq.getRemoteAddr();
 }
 @Override
-public String getRemoteHost() {
+public String getRemoteHost(){
 	return sreq.getRemoteHost();
 }
 @Override
-public int getRemotePort() {
+public int getRemotePort(){
 	return sreq.getRemotePort();
 }
 @Override
-public RequestDispatcher getRequestDispatcher(String arg0) {
+public RequestDispatcher getRequestDispatcher(String arg0){
 	return sreq.getRequestDispatcher(arg0);
 }
 @Override
-public String getScheme() {
+public String getScheme(){
 	return sreq.getScheme();
 }
 @Override
-public String getServerName() {
+public String getServerName(){
 	return sreq.getServerName();
 }
 @Override
-public int getServerPort() {
+public int getServerPort(){
 	return sreq.getServerPort();
 }
 @Override
-public ServletContext getServletContext() {
+public ServletContext getServletContext(){
 	return sreq.getServletContext();
 }
 @Override
-public boolean isAsyncStarted() {
+public boolean isAsyncStarted(){
 	return sreq.isAsyncStarted();
 }
 @Override
-public boolean isAsyncSupported() {
+public boolean isAsyncSupported(){
 	return sreq.isAsyncSupported();
 }
 @Override
-public boolean isSecure() {
+public boolean isSecure(){
 	return sreq.isSecure();
 }
 @Override
-public void removeAttribute(String arg0) {
+public void removeAttribute(String arg0){
 	sreq.removeAttribute(arg0);
 }
 @Override
-public void setAttribute(String arg0, Object arg1) {
+public void setAttribute(String arg0, Object arg1){
 	sreq.setAttribute(arg0, arg1);
 }
 @Override
-public void setCharacterEncoding(String arg0) throws UnsupportedEncodingException {
+public void setCharacterEncoding(String arg0) throws UnsupportedEncodingException{
 	sreq.setCharacterEncoding(arg0);
 }
 @Override
-public AsyncContext startAsync() throws IllegalStateException {
+public AsyncContext startAsync() throws IllegalStateException{
 	return sreq.startAsync();
 }
 @Override
-public AsyncContext startAsync(ServletRequest arg0, ServletResponse arg1) throws IllegalStateException {
+public AsyncContext startAsync(ServletRequest arg0, ServletResponse arg1) throws IllegalStateException{
 	return sreq.startAsync(arg0, arg1);
 }
 @Override
-public boolean authenticate(HttpServletResponse arg0) throws IOException, ServletException {
+public boolean authenticate(HttpServletResponse arg0) throws IOException, ServletException{
 	return sreq.authenticate(arg0);
 }
 @Override
-public String changeSessionId() {
+public String changeSessionId(){
 	return sreq.changeSessionId();
 }
 @Override
-public String getAuthType() {
+public String getAuthType(){
 	return sreq.getAuthType();
 }
 @Override
-public String getContextPath() {
+public String getContextPath(){
 	return sreq.getContextPath();
 }
 @Override
-public Cookie[] getCookies() {
+public Cookie[] getCookies(){
 	return sreq.getCookies();
 }
 @Override
-public long getDateHeader(String arg0) {
+public long getDateHeader(String arg0){
 	return sreq.getDateHeader(arg0);
 }
 @Override
-public String getHeader(String arg0) {
+public String getHeader(String arg0){
 	return sreq.getHeader(arg0);
 }
 @Override
-public Enumeration<String> getHeaderNames() {
+public Enumeration<String> getHeaderNames(){
 	return sreq.getHeaderNames();
 }
 @Override
-public Enumeration<String> getHeaders(String arg0) {
+public Enumeration<String> getHeaders(String arg0){
 	return sreq.getHeaders(arg0);
 }
 @Override
-public int getIntHeader(String arg0) {
+public int getIntHeader(String arg0){
 	return sreq.getIntHeader(arg0);
 }
 @Override
-public String getMethod() {
+public String getMethod(){
 	return sreq.getMethod();
 }
 @Override
-public Part getPart(String arg0) throws IOException, ServletException {
+public Part getPart(String arg0) throws IOException, ServletException{
 	return sreq.getPart(arg0);
 }
 @Override
-public Collection<Part> getParts() throws IOException, ServletException {
+public Collection<Part> getParts() throws IOException, ServletException{
 	return sreq.getParts();
 }
 @Override
-public String getPathInfo() {
+public String getPathInfo(){
 	return sreq.getPathInfo();
 }
 @Override
-public String getPathTranslated() {
+public String getPathTranslated(){
 	return sreq.getPathTranslated();
 }
 @Override
-public String getQueryString() {
+public String getQueryString(){
 	return sreq.getQueryString();
 }
 @Override
-public String getRemoteUser() {
+public String getRemoteUser(){
 	return sreq.getRemoteUser();
 }
 @Override
-public String getRequestURI() {
+public String getRequestURI(){
 	return sreq.getRequestURI();
 }
 @Override
-public StringBuffer getRequestURL() {
+public StringBuffer getRequestURL(){
 	return sreq.getRequestURL();
 }
 @Override
-public String getRequestedSessionId() {
+public String getRequestedSessionId(){
 	return sreq.getRequestedSessionId();
 }
 @Override
-public String getServletPath() {
+public String getServletPath(){
 	return sreq.getServletPath();
 }
 @Override
-public HttpSession getSession() {
+public HttpSession getSession(){
 	return sreq.getSession();
 }
 @Override
-public HttpSession getSession(boolean arg0) {
+public HttpSession getSession(boolean arg0){
 	return sreq.getSession(arg0);
 }
 @Override
-public Principal getUserPrincipal() {
+public Principal getUserPrincipal(){
 	return sreq.getUserPrincipal();
 }
 @Override
-public boolean isRequestedSessionIdFromCookie() {
+public boolean isRequestedSessionIdFromCookie(){
 	return sreq.isRequestedSessionIdFromCookie();
 }
 @Override
-public boolean isRequestedSessionIdFromURL() {
+public boolean isRequestedSessionIdFromURL(){
 	return sreq.isRequestedSessionIdFromURL();
 }
 @Deprecated
 @Override
-public boolean isRequestedSessionIdFromUrl() {
+public boolean isRequestedSessionIdFromUrl(){
 	return sreq.isRequestedSessionIdFromUrl();
 }
 @Override
@@ -389,7 +386,7 @@ public void login(String arg0, String arg1) throws ServletException{
 	sreq.login(arg0, arg1);
 }
 @Override
-public void logout() throws ServletException {
+public void logout() throws ServletException{
 	sreq.logout();
 }
 @Override
@@ -469,5 +466,5 @@ protected String readText() throws IOException, ServletException
 }
 protected String rstr;
 protected Object rdat;
-private final HttpServletRequest sreq;
+protected final HttpServletRequest sreq;
 }

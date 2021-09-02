@@ -276,114 +276,129 @@ protected static List<Package> getChildrenPackages(Package pkg){
 protected static List<Class<?>> getIncludeClasses(Package pkg){
 	return null;
 }
-public static void noEligibleReceipt(HttpServletResponse hrsp) throws IOException
+public static void noEligibleReceipt(HttpServletRequest hreq,HttpServletResponse hrsp) throws IOException
 {
 	if(hrsp.isCommitted()){
 		return;
 	}
 	hrsp.reset();
 	hrsp.setStatus(402);
-	setCommonHeader(hrsp);
+	setCommonHeader(hreq,hrsp);
 	hrsp.getWriter().write("Payment Required");
 }
-public static void noEligibleParameter(HttpServletResponse hrsp) throws IOException
+public static void noEligibleParameter(HttpServletRequest hreq,HttpServletResponse hrsp) throws IOException
 {
 	if(hrsp.isCommitted()){
 		return;
 	}
 	hrsp.reset();
 	hrsp.setStatus(498);
-	setCommonHeader(hrsp);
+	setCommonHeader(hreq,hrsp);
 	hrsp.getWriter().write("Parameter Required");
 }
-public static void noEligibleMimeType(HttpServletResponse hrsp) throws IOException
+public static void noEligibleMimeType(HttpServletRequest hreq,HttpServletResponse hrsp) throws IOException
 {
 	if(hrsp.isCommitted()){
 		return;
 	}
 	hrsp.reset();
 	hrsp.setStatus(415);
-	setCommonHeader(hrsp);
+	setCommonHeader(hreq,hrsp);
 	hrsp.getWriter().write("Unsupported Media Type");
 }
-public static void noEligibleRegular(HttpServletResponse hrsp) throws IOException
+public static void noEligibleRegular(HttpServletRequest hreq,HttpServletResponse hrsp) throws IOException
 {
 	if(hrsp.isCommitted()){
 		return;
 	}
 	hrsp.reset();
 	hrsp.setStatus(400);
-	setCommonHeader(hrsp);
+	setCommonHeader(hreq,hrsp);
 	hrsp.getWriter().write("Bad Request");
 }
-public static void noEligibleResource(HttpServletResponse hrsp) throws IOException
+public static void noEligibleResource(HttpServletRequest hreq,HttpServletResponse hrsp) throws IOException
 {
 	if(hrsp.isCommitted()){
 		return;
 	}
 	hrsp.reset();
 	hrsp.setStatus(404);
-	setCommonHeader(hrsp);
+	setCommonHeader(hreq,hrsp);
 	hrsp.getWriter().write("Not Found");
 }
-public static void noEligibleFormat(HttpServletResponse hrsp) throws IOException
+public static void noEligibleFormat(HttpServletRequest hreq,HttpServletResponse hrsp) throws IOException
 {
 	if(hrsp.isCommitted()){
 		return;
 	}
 	hrsp.reset();
 	hrsp.setStatus(499);
-	setCommonHeader(hrsp);
+	setCommonHeader(hreq,hrsp);
 	hrsp.getWriter().write("Payload Format Error");
 }
-public static void noEligibleRoutine(HttpServletResponse hrsp) throws IOException
+public static void noEligibleRoutine(HttpServletRequest hreq,HttpServletResponse hrsp) throws IOException
 {
 	if(hrsp.isCommitted()){
 		return;
 	}
 	hrsp.reset();
 	hrsp.setStatus(500);
-	setCommonHeader(hrsp);
+	setCommonHeader(hreq,hrsp);
 	hrsp.getWriter().write("Internal Server Error");
 }
-public static void noEligibleAuthorized(HttpServletResponse hrsp) throws IOException
+public static void noEligibleAuthorized(HttpServletRequest hreq,HttpServletResponse hrsp) throws IOException
 {
 	if(hrsp.isCommitted()){
 		return;
 	}
 	hrsp.reset();
 	hrsp.setStatus(401);
-	setCommonHeader(hrsp);
+	setCommonHeader(hreq,hrsp);
 	hrsp.getWriter().write("Unauthorized");
 }
-public static void noEligibleForbidden(HttpServletResponse hrsp) throws IOException
+public static void noEligibleForbidden(HttpServletRequest hreq,HttpServletResponse hrsp) throws IOException
 {
 	if(hrsp.isCommitted()){
 		return;
 	}
 	hrsp.reset();
 	hrsp.setStatus(403);
-	setCommonHeader(hrsp);
+	setCommonHeader(hreq,hrsp);
 	hrsp.getWriter().write("Forbidden");
 }
-public static void noEligibleMethod(HttpServletResponse hrsp) throws IOException
+public static void noEligibleMethod(HttpServletRequest hreq,HttpServletResponse hrsp) throws IOException
 {
 	if(hrsp.isCommitted()){
 		return;
 	}
 	hrsp.reset();
 	hrsp.setStatus(405);
-	setCommonHeader(hrsp);
+	setCommonHeader(hreq,hrsp);
 	hrsp.getWriter().write("Method Not Allowed");
 }
-protected static void setCommonHeader(HttpServletResponse hrsp) throws IOException
+protected static void setCommonHeader(HttpServletRequest hreq,HttpServletResponse hrsp) throws IOException
 {
 	hrsp.setHeader("Server","IIS/99.9");
 	hrsp.setContentType("text/plain");
 	hrsp.setCharacterEncoding("ASCII");
-	hrsp.setHeader("Access-Control-Allow-Origin","*");//hreq.getHeader("Origin");
-	hrsp.setHeader("Access-Control-Allow-Headers","*");//hreq.getHeader("Access-Control-Request-Headers");
-	hrsp.setHeader("Access-Control-Allow-Methods","*");//hreq.getHeader("Access-Control-Request-Method");
+	String origin=hreq.getHeader("Origin");
+	if(null==origin || origin.length()==0){
+		hrsp.setHeader("Access-Control-Allow-Origin","*");
+	}else{
+		hrsp.setHeader("Access-Control-Allow-Origin",origin);
+	}
+	String head=hreq.getHeader("Access-Control-Request-Headers");
+	if(null==head || head.length()==0){
+		hrsp.setHeader("Access-Control-Allow-Headers","*");
+	}else{
+		hrsp.setHeader("Access-Control-Allow-Headers",head);
+	}
+	String reqm=hreq.getHeader("Access-Control-Request-Method");
+	if(null==reqm || reqm.length()==0){
+		hrsp.setHeader("Access-Control-Allow-Methods","*");
+	}else{
+		hrsp.setHeader("Access-Control-Allow-Methods",reqm);
+	}
 	hrsp.setIntHeader("Access-Control-Max-Age",999999);
 	hrsp.setHeader("Access-Control-Allow-Credentials","true");
 	hrsp.setHeader("Access-Control-Expose-Headers","*");//X-My-Custom-Header,X-Another-Custom-Header
@@ -395,7 +410,7 @@ public static void responseOptions(HttpServletRequest hreq,HttpServletResponse h
 	}
 	hrsp.reset();
 	hrsp.setStatus(200);
-	setCommonHeader(hrsp);
+	setCommonHeader(hreq,hrsp);
 	hrsp.getWriter().close();
 }
 public static String[] publicuri;
