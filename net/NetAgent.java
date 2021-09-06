@@ -1,6 +1,8 @@
 package wcy.usual.net;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -54,11 +56,28 @@ public static final Object http(CharSequence type,CharSequence url,CharSequence 
 		}
 		hcon.getResponseCode();
 		mime=hcon.getContentType();
-		byte[] bytes=new byte[hcon.getContentLength()];
-		if(hcon.getErrorStream()==null){
-			hcon.getInputStream().read(bytes);//bytes=hcon.getInputStream().readAllBytes();
+		int len=hcon.getContentLength();
+		byte[] bytes=null;
+		if(-1==len){
+			ByteArrayOutputStream bos=new ByteArrayOutputStream();
+			InputStream his=null;
+			if(hcon.getErrorStream()==null){
+				his=hcon.getInputStream();
+			}else{
+				his=hcon.getErrorStream();
+			}
+			bytes=new byte[4095];
+			while((len=his.read(bytes))!=-1){
+				bos.write(bytes,0,len);
+			}
+			bytes=bos.toByteArray();
 		}else{
-			hcon.getErrorStream().read(bytes);//bytes=hcon.getErrorStream().readAllBytes();
+			bytes=new byte[len];
+			if(hcon.getErrorStream()==null){
+				hcon.getInputStream().read(bytes);//bytes=hcon.getInputStream().readAllBytes();
+			}else{
+				hcon.getErrorStream().read(bytes);//bytes=hcon.getErrorStream().readAllBytes();
+			}
 		}
 		if(null!=checker){
 			bytes=checker.check(hcon,bytes);

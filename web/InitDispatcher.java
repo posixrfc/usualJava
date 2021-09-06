@@ -369,7 +369,7 @@ protected void executeHandler(HttpServletRequest hreq,HttpServletResponse hrsp,O
 	}catch(Exception e){
 		e.printStackTrace(System.out);
 	}
-	WebCore.noEligibleRoutine(hreq,nrsp);
+	WebCore.noEligibleRoutine(nreq,nrsp);
 }
 protected void doNextFilter(HttpServletRequest hreq,HttpServletResponse hrsp,FilterChain chain) throws IOException,ServletException
 {

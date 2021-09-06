@@ -378,7 +378,7 @@ public static void noEligibleMethod(HttpServletRequest hreq,HttpServletResponse 
 }
 protected static void setCommonHeader(HttpServletRequest hreq,HttpServletResponse hrsp) throws IOException
 {
-	hrsp.setHeader("Server","IIS/99.9");
+	hrsp.setHeader("Server","cloudflare");
 	hrsp.setContentType("text/plain");
 	hrsp.setCharacterEncoding("ASCII");
 	String origin=hreq.getHeader("Origin");
