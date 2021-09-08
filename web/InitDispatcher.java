@@ -59,22 +59,22 @@ public void doFilter(ServletRequest sreq,ServletResponse srsp,FilterChain chain)
 			}
 			int idx=i+1;
 			if(idx==WebCore.signinuri.length){
-				WebCore.noEligibleResource(oreq,orsp);
+				WebCore.noEligibleAuthorized(oreq,orsp);
 				return;
 			}
 			if(null==WebCore.checker){
 				HttpSession sess=oreq.getSession(false);
 				if(null==sess){
-					WebCore.noEligibleResource(oreq,orsp);
+					WebCore.noEligibleAuthorized(oreq,orsp);
 					return;
 				}
 				if(sess.getAttribute(WebCore.signinuri[idx])==null){
-					WebCore.noEligibleResource(oreq,orsp);
+					WebCore.noEligibleAuthorized(oreq,orsp);
 					return;
 				}
 			}else{
 				if(WebCore.checker.hasError(oreq,WebCore.signinuri[idx])){
-					WebCore.noEligibleResource(oreq,orsp);
+					WebCore.noEligibleAuthorized(oreq,orsp);
 					return;
 				}
 			}
