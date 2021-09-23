@@ -57,6 +57,13 @@ public static final Object http(CharSequence type,CharSequence url,CharSequence 
 		hcon.getResponseCode();
 		mime=hcon.getContentType();
 		int len=hcon.getContentLength();
+		if(0==len){
+			if(null!=checker){
+				checker.check(hcon,null);
+			}
+			hcon.disconnect();
+			return null;
+		}
 		byte[] bytes=null;
 		if(-1==len){
 			ByteArrayOutputStream bos=new ByteArrayOutputStream();

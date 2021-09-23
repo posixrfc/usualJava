@@ -3,9 +3,14 @@ package wcy.usual.web;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -25,6 +30,7 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpUpgradeHandler;
 import javax.servlet.http.Part;
 
+import wcy.usual.codec.Codec;
 import wcy.usual.codec.json.JsonSerializer;
 import wcy.usual.ognl.Ognls;
 import wcy.usual.codec.xml.XmlSerializer;
@@ -34,8 +40,8 @@ public class HttpRqst implements HttpServletRequest
 public HttpRqst(HttpServletRequest servletRequest) throws ServletException, IOException
 {
 	this.sreq=Objects.requireNonNull(servletRequest);
-	enctype=servletRequest.getContentType();
-	switch(servletRequest.getMethod())
+	enctype=sreq.getContentType();
+	switch(sreq.getMethod())
 	{
 	case "GET":
 		break;
@@ -51,6 +57,38 @@ public HttpRqst(HttpServletRequest servletRequest) throws ServletException, IOEx
 		switch(enctype)
 		{
 		case "application/x-www-form-urlencoded":
+			if(sreq.getMethod().contentEquals("POST")){
+				break;
+			}//user=root&pass=123456&vcode=DCFP
+			readText();
+			if(null==rstr||rstr.length()==0){
+				break;
+			}
+			Map<CharSequence,Object> values=new HashMap<CharSequence,Object>();
+			String[] strval=rstr.split("&");
+			for(String kvpair:strval){
+				if(null==kvpair||kvpair.length()==0){
+					continue;
+				}
+				String[] once=kvpair.split("=");
+				if(null==once||2!=once.length){
+					continue;
+				}
+				if(null==once[0]||once[0].length()==0||null==once[1]||once[1].length()==0){
+					continue;
+				}
+				try{
+					once[0]=URLDecoder.decode(once[0],"UTF-8");
+					once[1]=URLDecoder.decode(once[1],"UTF-8");
+				}catch(Exception ie){
+					ie.printStackTrace(System.out);
+					continue;
+				}
+				Codec.putMultiVal(values,once[0],once[1]);
+			}
+			if(values.size()!=0){
+				rdat=values;
+			}
 			break;
 		case "application/json":
 			rdat=JsonSerializer.parseJson(readText());
@@ -75,7 +113,7 @@ public HttpRqst(HttpServletRequest servletRequest) throws ServletException, IOEx
 		default:;
 		}
 	}
-	String client=servletRequest.getHeader("User-Agent");
+	String client=sreq.getHeader("User-Agent");
 	mobile=(null!=client&&client.matches("^.+[^a-zA-Z0-9]((iPhone)|(iPad)|(Android))[^a-zA-Z0-9].+$"));
 }
 public final boolean mobile;
@@ -172,20 +210,124 @@ public Enumeration<Locale> getLocales(){
 	return sreq.getLocales();
 }
 @Override
-public String getParameter(String arg0){
-	return sreq.getParameter(arg0);
+public String getParameter(String arg0)
+{
+	if(null==arg0||arg0.length()==0){
+		return null;
+	}
+	if(sreq.getMethod().contentEquals("GET")){
+		return sreq.getParameter(arg0);
+	}
+	if(null==enctype||!enctype.contentEquals("application/x-www-form-urlencoded")){
+		return null;
+	}
+	if(sreq.getMethod().contentEquals("POST")){
+		return sreq.getParameter(arg0);
+	}
+	if(!(rdat instanceof Map)){
+		return null;
+	}
+	if(null==rdat){
+		return null;
+	}
+	@SuppressWarnings("unchecked")
+	Object any=((Map<CharSequence,Object>)rdat).get(arg0);
+	if(any instanceof CharSequence){
+		return any.toString();
+	}
+	if(any instanceof List){
+		return ((List<?>)any).get(0).toString();
+	}
+	return null;
+}
+@SuppressWarnings("unchecked")
+@Override
+public Map<String,String[]> getParameterMap()
+{
+	if(sreq.getMethod().contentEquals("GET")){
+		return sreq.getParameterMap();
+	}
+	if(null==enctype||!enctype.contentEquals("application/x-www-form-urlencoded")){
+		return null;
+	}
+	if(sreq.getMethod().contentEquals("POST")){
+		return sreq.getParameterMap();
+	}
+	if(!(rdat instanceof Map)){
+		return null;
+	}
+	Map<String,String[]> rst=new HashMap<String,String[]>();
+	Map<CharSequence,Object> values=(Map<CharSequence,Object>)rdat;
+	for(CharSequence key:values.keySet()){
+		Object any=values.get(key);
+		if(any instanceof CharSequence){
+			rst.put(key.toString(),new String[]{any.toString()});
+			continue;
+		}
+		List<CharSequence> arr=(List<CharSequence>)any;
+		String[] val=new String[arr.size()];
+		for(int i=0;i!=val.length;i++){
+			val[i]=arr.get(i).toString();
+		}
+		rst.put(key.toString(),val);
+	}
+	return rst;
 }
 @Override
-public Map<String,String[]> getParameterMap(){
-	return sreq.getParameterMap();
+public Enumeration<String> getParameterNames()
+{
+	if(sreq.getMethod().contentEquals("GET")){
+		return sreq.getParameterNames();
+	}
+	if(null==enctype||!enctype.contentEquals("application/x-www-form-urlencoded")){
+		return null;
+	}
+	if(sreq.getMethod().contentEquals("POST")){
+		return sreq.getParameterNames();
+	}
+	if(!(rdat instanceof Map)){
+		return null;
+	}
+	@SuppressWarnings("unchecked")
+	Map<CharSequence,Object> values=((Map<CharSequence,Object>)rdat);
+	List<String> keys=new ArrayList<String>(values.size());
+	for(CharSequence key:values.keySet()){
+		keys.add(key.toString());
+	}
+	return Collections.enumeration(keys);
 }
+@SuppressWarnings("unchecked")
 @Override
-public Enumeration<String> getParameterNames(){
-	return sreq.getParameterNames();
-}
-@Override
-public String[] getParameterValues(String arg0){
-	return sreq.getParameterValues(arg0);
+public String[] getParameterValues(String arg0)
+{
+	if(null==arg0||arg0.length()==0){
+		return null;
+	}
+	if(sreq.getMethod().contentEquals("GET")){
+		return sreq.getParameterValues(arg0);
+	}
+	if(null==enctype||!enctype.contentEquals("application/x-www-form-urlencoded")){
+		return null;
+	}
+	if(sreq.getMethod().contentEquals("POST")){
+		return sreq.getParameterValues(arg0);
+	}
+	if(!(rdat instanceof Map<?,?>)){
+		return null;
+	}
+	Object any=((Map<CharSequence,Object>)rdat).get(arg0);
+	if(null==any){
+		return null;
+	}
+	if(any instanceof CharSequence){
+		return new String[]{any.toString()};
+	}
+	List<CharSequence> arr=(List<CharSequence>)any;
+	String[] rst=new String[arr.size()];
+	for(int i=0;i!=rst.length;i++){
+		rst[i]=arr.get(i).toString();
+	}
+	return rst;
 }
 @Override
 public String getProtocol(){

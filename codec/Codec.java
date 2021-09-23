@@ -145,9 +145,9 @@ public static void putMultiVal(Map<CharSequence,Object> container,CharSequence k
 		return;
 	}
 	List<Object> list=new ArrayList<Object>();
+	container.put(key,list);
 	list.add(tmp);
 	list.add(val);
-	container.put(key,list);
 }
 public static String calcAttrName(Method func)
 {
