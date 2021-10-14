@@ -160,7 +160,7 @@ protected static void getMembers(List<Method> validMds,List<Method> elideMds,Lis
 		if(Modifier.isStatic(sign)==asInstance){
 			continue;
 		}
-		if(ltmd.getParameterCount()!=0){
+		if(ltmd.getParameterCount()!=0){//ltmd.getTypeParameters().length
 			continue;
 		}
 		if(ltmd.getReturnType()==void.class||ltmd.getReturnType()==Void.class){

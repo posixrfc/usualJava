@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -15,6 +14,8 @@ import javax.servlet.FilterRegistration.Dynamic;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import wcy.usual.db.Resource;
 
 public abstract class WebCore
 {
@@ -101,6 +102,18 @@ public static void init(ServletContext ctx,String... pkgs)
 				createObject(cls,true);
 				continue clsloop;
 			}
+		}
+	}
+	for(int i=0;resource.size()!=i;){
+		try{
+			if(resource.get(i).init()){
+				i++;
+			}else{
+				resource.remove(i);
+			}
+		}catch(Exception e){
+			e.printStackTrace(System.out);
+			resource.remove(i);
 		}
 	}
 	for(Object web:webhandler){
@@ -219,14 +232,28 @@ protected static void createObject(Class<?> cls,boolean pojo){
 	}
 	try{
 		Object o=c.newInstance();
+		if(o instanceof Resource){
+			resource.add((Resource)o);
+		}
 		if(pojo){
 			components.add(o);//System.out.println("----WebCore------createComponent-------"+cls.getName()+"-----");
 		}else{
 			webhandler.add(o);//System.out.println("----WebCore------createWebHandler-------"+cls.getName()+"-----");
 		}
-	}catch(InstantiationException|IllegalAccessException|IllegalArgumentException|InvocationTargetException e){
+	}catch(Exception e){
 		e.printStackTrace(System.out);
 	}
+}
+public static void kill()
+{
+	for(int i=0;resource.size()!=i;i++){
+		try{
+			resource.get(i).kill();
+		}catch(Exception e){
+			e.printStackTrace(System.out);
+		}
+	}
+	System.out.println("------WebCore------kill-------finished------");
 }
 protected static List<String> getClassNames(String folder,File pkgdir){
 	File[] fs=pkgdir.listFiles();
@@ -419,4 +446,5 @@ public static SessionChecker checker;
 public static ResponsePretreater preater;
 protected static final List<Object> webhandler=new ArrayList<Object>();
 protected static final List<Object> components=new ArrayList<Object>();
+protected static final List<Resource> resource=new ArrayList<Resource>();
 }

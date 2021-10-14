@@ -48,9 +48,9 @@ public byte[] encrypt(byte[] srcBytes)
 		return null;
 	}
 	byte[] resultBytes;
-	try {
+	try{
 		resultBytes=cipher.doFinal(srcBytes);
-	} catch (Exception e) {
+	}catch(Exception e){
 		e.printStackTrace(System.err);
 		return null;
 	}
@@ -71,7 +71,6 @@ public String encrypt(String srcString)
 	bytes=encrypt(bytes);//加密RSA
 	return null==bytes ? null : Codec.bit2hex(bytes);
 }
-	
 public byte[] decrypt(byte[] srcBytes)
 {
 	if (null==srcBytes || 0==srcBytes.length){
@@ -91,7 +90,7 @@ public byte[] decrypt(byte[] srcBytes)
 		return null;
 	}
 	byte[] resultBytes;
-	try {
+	try{
 		resultBytes=cipher.doFinal(srcBytes);
 	}catch(Exception e){
 		e.printStackTrace(System.err);
@@ -101,7 +100,7 @@ public byte[] decrypt(byte[] srcBytes)
 }
 public String decrypt(String srcString)
 {
-	if (null==srcString || srcString.length()==0) {
+	if(null==srcString || srcString.length()==0){
 		return null;
 	}
 	byte[] bytes=Codec.hex2bit(srcString);
@@ -182,7 +181,7 @@ public EncryptRSA(CharSequence publicFile,CharSequence privateFile)
         	hasError=true;
         	return;
 		}
-        if (!storageKey(priKey,priKeyFile))
+        if(!storageKey(priKey,priKeyFile))
         {
             hasError=true;
         	return;
