@@ -182,7 +182,8 @@ public static void init(ServletContext ctx,String... pkgs)
 	}
 	System.out.println("------WebCore------init-------finished------");
 }
-protected static void createObject(Class<?> cls,boolean pojo){
+protected static void createObject(Class<?> cls,boolean pojo)
+{
 	if(cls.isAnonymousClass()){
 		return;
 	}

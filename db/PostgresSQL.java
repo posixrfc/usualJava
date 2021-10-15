@@ -24,6 +24,8 @@ public Connection initRdbConnect()
 	{
 		try{
 			dc=super.dbs.getConnection();
+			dc.setAutoCommit(false);
+			dc.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 		}catch(SQLException e){
 			e.printStackTrace(System.out);
 			rslk.unlock();
