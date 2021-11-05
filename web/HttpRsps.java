@@ -14,72 +14,78 @@ import javax.servlet.http.HttpServletResponse;
 
 public class HttpRsps implements HttpServletResponse
 {
-public HttpRsps(HttpServletResponse servletResponse){
-	this.servletResponse=Objects.requireNonNull(servletResponse);
+public HttpRsps(HttpRqst servletRequest,HttpServletResponse servletResponse){
+	this.sreq=Objects.requireNonNull(servletRequest);
+	this.srsp=Objects.requireNonNull(servletResponse);
+	try{
+		WebCore.setCommonHeader(sreq,srsp);
+	}catch(IOException e){
+		e.printStackTrace(System.err);
+	}
 }
 @Override
 public void flushBuffer() throws IOException{	
-	servletResponse.flushBuffer();
+	srsp.flushBuffer();
 }
 @Override
 public int getBufferSize(){
-	return servletResponse.getBufferSize();
+	return srsp.getBufferSize();
 }
 @Override
 public String getCharacterEncoding(){
-	return servletResponse.getCharacterEncoding();
+	return srsp.getCharacterEncoding();
 }
 @Override
 public String getContentType(){
-	return servletResponse.getContentType();
+	return srsp.getContentType();
 }
 @Override
 public Locale getLocale(){
-	return servletResponse.getLocale();
+	return srsp.getLocale();
 }
 @Override
 public ServletOutputStream getOutputStream() throws IOException{
-	return servletResponse.getOutputStream();
+	return srsp.getOutputStream();
 }
 @Override
 public PrintWriter getWriter() throws IOException{
-	return servletResponse.getWriter();
+	return srsp.getWriter();
 }
 @Override
 public boolean isCommitted(){
-	return servletResponse.isCommitted();
+	return srsp.isCommitted();
 }
 @Override
 public void reset(){
-	servletResponse.reset();
+	srsp.reset();
 }
 @Override
 public void resetBuffer(){
-	servletResponse.resetBuffer();
+	srsp.resetBuffer();
 }
 @Override
 public void setBufferSize(int arg0){
-	servletResponse.setBufferSize(arg0);
+	srsp.setBufferSize(arg0);
 }
 @Override
 public void setCharacterEncoding(String arg0){
-	servletResponse.setCharacterEncoding(arg0);
+	srsp.setCharacterEncoding(arg0);
 }
 @Override
 public void setContentLength(int arg0){
-	servletResponse.setContentLength(arg0);
+	srsp.setContentLength(arg0);
 }
 @Override
 public void setContentLengthLong(long arg0){
-	servletResponse.setContentLengthLong(arg0);
+	srsp.setContentLengthLong(arg0);
 }
 @Override
 public void setContentType(String arg0){
-	servletResponse.setContentType(arg0);
+	srsp.setContentType(arg0);
 }
 @Override
 public void setLocale(Locale arg0){
-	servletResponse.setLocale(arg0);
+	srsp.setLocale(arg0);
 }
 @Override
 public void addCookie(Cookie arg0){
@@ -88,8 +94,8 @@ public void addCookie(Cookie arg0){
 	if(arg0.getComment()==null){
 		arg0.setComment("wcy");
 	}
-	servletResponse.addCookie(arg0);
-	Collection<String> ckold=servletResponse.getHeaders("Set-Cookie");
+	srsp.addCookie(arg0);
+	Collection<String> ckold=srsp.getHeaders("Set-Cookie");
 	List<String> cknew=new ArrayList<String>(ckold.size()+1);
 	String ckpre=arg0.getName()+'='+arg0.getValue()+';';
 	for(String ckval:ckold){
@@ -119,9 +125,9 @@ public void addCookie(Cookie arg0){
 		int idx=sessid.indexOf(';')+1;
 		sessid=sessid.substring(0,idx)+" SameSite=None;"+sessid.substring(idx);
 	}
-	servletResponse.setHeader("Set-Cookie",sessid);
+	srsp.setHeader("Set-Cookie",sessid);
 	for(int i=0,l=cknew.size();i!=l;i++){
-		servletResponse.addHeader("Set-Cookie",cknew.get(i));
+		srsp.addHeader("Set-Cookie",cknew.get(i));
 	}
 /*
 JSESSIONID=C10EEA846561D4731EA3C93259E0E3DC; SameSite=None; Path=/cater; Secure; HttpOnly
@@ -133,86 +139,87 @@ Set-Cookie: cknm2=ckval2; Max-Age=86400; Expires=Fri, 03-Sep-2021 02:24:30 GMT; 
 }
 @Override
 public void addDateHeader(String arg0, long arg1){
-	servletResponse.addDateHeader(arg0, arg1);
+	srsp.addDateHeader(arg0, arg1);
 }
 @Override
 public void addHeader(String arg0, String arg1){
-	servletResponse.addHeader(arg0, arg1);
+	srsp.addHeader(arg0, arg1);
 }
 @Override
 public void addIntHeader(String arg0, int arg1){
-	servletResponse.addIntHeader(arg0, arg1);
+	srsp.addIntHeader(arg0, arg1);
 }
 @Override
 public boolean containsHeader(String arg0){
-	return servletResponse.containsHeader(arg0);
+	return srsp.containsHeader(arg0);
 }
 @Override
 public String encodeRedirectURL(String arg0){
-	return servletResponse.encodeRedirectURL(arg0);
+	return srsp.encodeRedirectURL(arg0);
 }
 @Deprecated
 @Override
 public String encodeRedirectUrl(String arg0){
-	return servletResponse.encodeRedirectUrl(arg0);
+	return srsp.encodeRedirectUrl(arg0);
 }
 @Override
 public String encodeURL(String arg0){
-	return servletResponse.encodeURL(arg0);
+	return srsp.encodeURL(arg0);
 }
 @Deprecated
 @Override
 public String encodeUrl(String arg0){
-	return servletResponse.encodeUrl(arg0);
+	return srsp.encodeUrl(arg0);
 }
 @Override
 public String getHeader(String arg0){
-	return servletResponse.getHeader(arg0);
+	return srsp.getHeader(arg0);
 }
 @Override
 public Collection<String> getHeaderNames(){
-	return servletResponse.getHeaderNames();
+	return srsp.getHeaderNames();
 }
 @Override
 public Collection<String> getHeaders(String arg0){
-	return servletResponse.getHeaders(arg0);
+	return srsp.getHeaders(arg0);
 }
 @Override
 public int getStatus(){
-	return servletResponse.getStatus();
+	return srsp.getStatus();
 }
 @Override
 public void sendError(int arg0) throws IOException{
-	servletResponse.sendError(arg0);
+	srsp.sendError(arg0);
 }
 @Override
 public void sendError(int arg0, String arg1) throws IOException{
-	servletResponse.sendError(arg0,arg1);
+	srsp.sendError(arg0,arg1);
 }
 @Override
 public void sendRedirect(String arg0) throws IOException{
-	servletResponse.sendRedirect(arg0);
+	srsp.sendRedirect(arg0);
 }
 @Override
 public void setDateHeader(String arg0, long arg1){
-	servletResponse.setDateHeader(arg0, arg1);
+	srsp.setDateHeader(arg0, arg1);
 }
 @Override
 public void setHeader(String arg0, String arg1){
-	servletResponse.setHeader(arg0,arg1);
+	srsp.setHeader(arg0,arg1);
 }
 @Override
 public void setIntHeader(String arg0, int arg1){
-	servletResponse.setIntHeader(arg0,arg1);
+	srsp.setIntHeader(arg0,arg1);
 }
 @Override
 public void setStatus(int arg0){
-	servletResponse.setStatus(arg0);
+	srsp.setStatus(arg0);
 }
 @Deprecated
 @Override
 public void setStatus(int arg0, String arg1){
-	servletResponse.setStatus(arg0,arg1);
+	srsp.setStatus(arg0,arg1);
 }
-protected final HttpServletResponse servletResponse;
+public final HttpRqst sreq;
+public final HttpServletResponse srsp;
 }

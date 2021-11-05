@@ -6,9 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.locks.Lock;
@@ -35,14 +33,37 @@ public void killResource(Statement stmt,ResultSet rst)
 		}
 	}
 }
-public String getScalar(String sql)
+public int exec(CharSequence sql)
+{
+	int cnt=-1;
+	Connection link=initRdbConnect();
+	if(null==link){
+		return cnt;
+	}
+	PreparedStatement stmt=null;
+	try{
+		stmt=link.prepareStatement(sql.toString());
+		cnt=stmt.executeUpdate();
+	}catch(SQLException e){
+		e.printStackTrace(System.err);
+		return cnt;
+	}finally{
+		killResource(stmt,null);
+		killRdbConnect(link);
+	}
+	return cnt;
+}
+public String getScalar(CharSequence sql)
 {
 	Connection link=initRdbConnect();
+	if(null==link){
+		return null;
+	}
 	PreparedStatement stmt=null;
 	ResultSet rset=null;
 	String str=null;
 	try{
-		stmt=link.prepareStatement(sql);
+		stmt=link.prepareStatement(sql.toString());
 		rset=stmt.executeQuery();
 		rset.next();
 		str=rset.getString(1);
@@ -54,14 +75,14 @@ public String getScalar(String sql)
 	}
 	return str;
 }
-public List<String> getCol(String sql)
+public List<String> getCol(CharSequence sql)
 {
 	Connection link=initRdbConnect();
 	PreparedStatement stmt=null;
 	ResultSet rset=null;
 	List<String> res=new ArrayList<String>();
 	try{
-		stmt=link.prepareStatement(sql);
+		stmt=link.prepareStatement(sql.toString());
 		rset=stmt.executeQuery();
 		while(rset.next()){
 			res.add(rset.getString(1));
@@ -74,22 +95,24 @@ public List<String> getCol(String sql)
 	}
 	return res.size()==0 ? null : res;
 }
-public Map<String,String> getRow(String sql,String...alias)
+public List<String> getRow(CharSequence sql)
 {
 	Connection link=initRdbConnect();
+	if(null==link){
+		return null;
+	}
 	PreparedStatement stmt=null;
 	ResultSet rset=null;
-	Map<String,String> row=null;
+	List<String> row=null;
 	try{
-		stmt=link.prepareStatement(sql);
+		stmt=link.prepareStatement(sql.toString());
 		rset=stmt.executeQuery();
-		if(rset.next()){
-			row=new HashMap<String,String>();
-			String tmp;
-			for(int i=0;alias.length!=i;i++){
-				if((tmp=rset.getString(alias[i]))!=null){
-					row.put(alias[i],tmp);
-				}
+		if(rset.getFetchSize()==1){
+			rset.next();
+			int cols=rset.getMetaData().getColumnCount();
+			row=new ArrayList<String>(cols);
+			for(int i=1,l=cols+1;l!=i;i++){
+				row.add(rset.getString(i));
 			}
 		}
 	}catch(SQLException e){
@@ -98,26 +121,31 @@ public Map<String,String> getRow(String sql,String...alias)
 		killResource(stmt,rset);
 		killRdbConnect(link);
 	}
-	return row.size()==0 ? null : row;
+	return row;
 }
-public List<Map<String,String>> getTab(String sql,String...alias)
+public List<List<String>> getTab(CharSequence sql)
 {
 	Connection link=initRdbConnect();
+	if(null==link){
+		return null;
+	}
 	PreparedStatement stmt=null;
 	ResultSet rset=null;
-	List<Map<String,String>> res=new ArrayList<Map<String,String>>();
+	List<List<String>> res=null;
 	try{
-		stmt=link.prepareStatement(sql);
+		stmt=link.prepareStatement(sql.toString());
 		rset=stmt.executeQuery();
-		while(rset.next()){
-			Map<String,String> row=new HashMap<String, String>();
-			String tmp;
-			for(int i=0;alias.length!=i;i++){
-				if((tmp=rset.getString(alias[i]))!=null){
-					row.put(alias[i],tmp);
+		int size=rset.getFetchSize();
+		if(0!=size){
+			res=new ArrayList<List<String>>(size);
+			int ccnt=rset.getMetaData().getColumnCount();
+			while(rset.next()){
+				List<String> row=new ArrayList<String>(ccnt);
+				for(int i=1,l=ccnt+1;l!=i;i++){
+					row.add(rset.getString(i));
 				}
+				res.add(row);
 			}
-			res.add(row.size()==0 ? null : row);
 		}
 	}catch(SQLException e){
 		e.printStackTrace(System.err);
@@ -125,7 +153,7 @@ public List<Map<String,String>> getTab(String sql,String...alias)
 		killResource(stmt,rset);
 		killRdbConnect(link);
 	}
-	return res.size()==0 ? null : res;
+	return res;
 }
 @Override
 public boolean init() throws Exception
@@ -163,10 +191,20 @@ public void run()
 	rslk.lock();
 	for(int i=0;pool.size()!=i;)
 	{
+		Connection dc=pool.get(i);
 		if(stat.get(i)==byte.class){
+			try{
+				if(dc.isClosed()){
+					pool.remove(i);
+					stat.remove(i);
+				}
+			}catch(SQLException e){
+				pool.remove(i);
+				stat.remove(i);
+				e.printStackTrace(System.out);
+			}
 			continue;
 		}
-		Connection dc=pool.get(i);
 		try{
 			if(dc.isClosed()){
 				pool.remove(i);

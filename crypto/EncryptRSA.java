@@ -20,7 +20,7 @@ import java.security.interfaces.RSAPublicKey;
 
 import javax.crypto.Cipher;
 
-import wcy.usual.codec.Codec;
+import wcy.usual.func.Tool;
 
 public final class EncryptRSA
 {
@@ -69,7 +69,7 @@ public String encrypt(String srcString)
 		return null;
 	}
 	bytes=encrypt(bytes);//加密RSA
-	return null==bytes ? null : Codec.bit2hex(bytes);
+	return null==bytes ? null : Tool.bit2hex(bytes);
 }
 public byte[] decrypt(byte[] srcBytes)
 {
@@ -103,7 +103,7 @@ public String decrypt(String srcString)
 	if(null==srcString || srcString.length()==0){
 		return null;
 	}
-	byte[] bytes=Codec.hex2bit(srcString);
+	byte[] bytes=Tool.hex2bit(srcString);
 	bytes=decrypt(bytes);//解密RSA
 	if(null==bytes){
 		return null;

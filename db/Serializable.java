@@ -1,4 +1,4 @@
-package wcy.usual;
+package wcy.usual.db;
 
 public abstract interface Serializable extends java.io.Serializable
 {

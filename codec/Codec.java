@@ -18,7 +18,7 @@ import java.util.Map;
 import wcy.usual.codec.json.JsonSerializer;
 import wcy.usual.codec.xml.XmlSerializer;
 
-public final class Codec
+public interface Codec
 {
 public static Map<CharSequence,Object> uri2obj(CharSequence queryString)
 {
@@ -198,28 +198,5 @@ public static String calcAttrName(Method func)
 		return char1+mnm.substring(3);
 	}
 	return mnm;
-}
-public static byte[] hex2bit(String hex)
-{
-	int len=hex.length();
-	byte bytes[]=new byte[len/2];
-	for(int i=0;len!=i;i+=2){
-		short twobit=(short)Short.parseShort(hex.substring(i, i+2), 16);
-		if(127<twobit) {
-			twobit-=256;
-		}
-		bytes[i/2]=(byte)twobit;
-	}
-	return bytes;
-}
-public static String bit2hex(byte[] bytes)
-{
-	StringBuilder sb=new StringBuilder(bytes.length<<1);
-	String hex;
-	for(int idx=0;idx!=bytes.length;idx++) {
-		hex=Integer.toHexString(bytes[idx] & 0xff);
-		sb.append(hex.length()==1?('0'+hex):hex);
-	}
-	return sb.toString();
 }
 }

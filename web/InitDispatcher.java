@@ -341,7 +341,6 @@ public void doFilter(ServletRequest sreq,ServletResponse srsp,FilterChain chain)
 protected void executeHandler(HttpServletRequest hreq,HttpServletResponse hrsp,Object target,Method action) throws IOException
 {
 	HttpRqst nreq=null;
-	HttpRsps nrsp=new HttpRsps(hrsp);
 	if(!(hreq instanceof HttpRqst)){
 		try{
 			nreq=new HttpRqst(hreq);
@@ -351,6 +350,7 @@ protected void executeHandler(HttpServletRequest hreq,HttpServletResponse hrsp,O
 			return;
 		}
 	}
+	HttpRsps nrsp=new HttpRsps(nreq,hrsp);
 	if(nreq.getReqTxt()!=null && nreq.getReqTxt().length()!=0 && nreq.getMimeType()==null){
 		WebCore.noEligibleFormat(hreq,nrsp);
 		return;
@@ -374,8 +374,9 @@ protected void executeHandler(HttpServletRequest hreq,HttpServletResponse hrsp,O
 protected void doNextFilter(HttpServletRequest hreq,HttpServletResponse hrsp,FilterChain chain) throws IOException,ServletException
 {
 	try{
-		HttpRsps nrsp=new HttpRsps(hrsp);
-		chain.doFilter(new HttpRqst(hreq),nrsp);
+		HttpRqst nreq=new HttpRqst(hreq);
+		HttpRsps nrsp=new HttpRsps(nreq,hrsp);
+		chain.doFilter(nreq,nrsp);
 	}catch(Exception e){
 		e.printStackTrace(System.out);
 		WebCore.noEligibleRoutine(hreq,hrsp);

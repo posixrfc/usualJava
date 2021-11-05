@@ -1,4 +1,4 @@
-package wcy.usual;
+package wcy.usual.func;
 
 import java.awt.BasicStroke;
 import java.awt.Graphics;
@@ -31,7 +31,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 
-public final class QRCodes
+public interface QRCodes
 {
 public static boolean encodeQRCode(CharSequence content,int width,int height,OutputStream retos,CharSequence fmt)
 {
@@ -135,5 +135,4 @@ public static String decodeQRCode(InputStream imgis)
 	String value=result.getText();
 	return null==value || value.length()==0 ? null : value;
 }
-protected QRCodes(){}
 }

@@ -1,4 +1,4 @@
-package wcy.usual;
+package wcy.usual.func;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class Loger
+public class Logging
 {
 public void log(CharSequence chrs)
 {
@@ -16,13 +16,13 @@ public void log(CharSequence chrs)
 	}
 	FileWriter fw=null;
 	BufferedWriter bw=null;
-	Loger.lk.lock();
+	Logging.lk.lock();
 	String time=LocalDateTime.now().toString().replace('T',' ');
 	String clsn=cls.getTypeName();
 	Thread t=Thread.currentThread();
 	String trdn=t.getThreadGroup().getName()+'-'+t.getName();
 	try{
-		fw=new FileWriter(Loger.path,true);
+		fw=new FileWriter(Logging.path,true);
 		bw=new BufferedWriter(fw);
 		bw.write(time+' '+clsn+' '+trdn+' '+chrs);
 		bw.newLine();
@@ -31,7 +31,7 @@ public void log(CharSequence chrs)
 	}catch(IOException ex){
 		ex.printStackTrace(System.err);
 	}finally{
-		Loger.lk.unlock();
+		Logging.lk.unlock();
 	}
 }
 
@@ -71,14 +71,14 @@ public void log(char[] chs){
 	this.log(String.valueOf(chs));
 }
 
-public Loger(Class<?> cls){
+public Logging(Class<?> cls){
 	this.cls=cls;
 }
 public static void setLogFile(CharSequence path)
 {
-	Loger.lk.lock();
-	Loger.path=path.toString();
-	Loger.lk.unlock();
+	Logging.lk.lock();
+	Logging.path=path.toString();
+	Logging.lk.unlock();
 }
 protected Class<?> cls;
 

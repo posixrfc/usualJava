@@ -304,6 +304,16 @@ protected static List<Package> getChildrenPackages(Package pkg){
 protected static List<Class<?>> getIncludeClasses(Package pkg){
 	return null;
 }
+public static void noErrorFinished(HttpServletRequest hreq,HttpServletResponse hrsp) throws IOException
+{
+	if(hrsp.isCommitted()){
+		return;
+	}
+	hrsp.reset();
+	hrsp.setStatus(200);
+	setCommonHeader(hreq,hrsp);
+	hrsp.getWriter().write("OK");
+}
 public static void noEligibleReceipt(HttpServletRequest hreq,HttpServletResponse hrsp) throws IOException
 {
 	if(hrsp.isCommitted()){
@@ -404,28 +414,34 @@ public static void noEligibleMethod(HttpServletRequest hreq,HttpServletResponse 
 	setCommonHeader(hreq,hrsp);
 	hrsp.getWriter().write("Method Not Allowed");
 }
-protected static void setCommonHeader(HttpServletRequest hreq,HttpServletResponse hrsp) throws IOException
+public static void setCommonHeader(HttpServletRequest hreq,HttpServletResponse hrsp) throws IOException
 {
 	hrsp.setHeader("Server","cloudflare");
 	hrsp.setContentType("text/plain");
-	hrsp.setCharacterEncoding("ASCII");
-	String origin=hreq.getHeader("Origin");
-	if(null==origin || origin.length()==0){
+	hrsp.setCharacterEncoding("UTF-8");
+	if(null==hreq){
 		hrsp.setHeader("Access-Control-Allow-Origin","*");
-	}else{
-		hrsp.setHeader("Access-Control-Allow-Origin",origin);
-	}
-	String head=hreq.getHeader("Access-Control-Request-Headers");
-	if(null==head || head.length()==0){
 		hrsp.setHeader("Access-Control-Allow-Headers","*");
-	}else{
-		hrsp.setHeader("Access-Control-Allow-Headers",head);
-	}
-	String reqm=hreq.getHeader("Access-Control-Request-Method");
-	if(null==reqm || reqm.length()==0){
 		hrsp.setHeader("Access-Control-Allow-Methods","*");
 	}else{
-		hrsp.setHeader("Access-Control-Allow-Methods",reqm);
+		String origin=hreq.getHeader("Origin");
+		if(null==origin || origin.length()==0){
+			hrsp.setHeader("Access-Control-Allow-Origin","*");
+		}else{
+			hrsp.setHeader("Access-Control-Allow-Origin",origin);
+		}
+		String head=hreq.getHeader("Access-Control-Request-Headers");
+		if(null==head || head.length()==0){
+			hrsp.setHeader("Access-Control-Allow-Headers","*");
+		}else{
+			hrsp.setHeader("Access-Control-Allow-Headers",head);
+		}
+		String reqm=hreq.getHeader("Access-Control-Request-Method");
+		if(null==reqm || reqm.length()==0){
+			hrsp.setHeader("Access-Control-Allow-Methods","*");
+		}else{
+			hrsp.setHeader("Access-Control-Allow-Methods",reqm);
+		}
 	}
 	hrsp.setIntHeader("Access-Control-Max-Age",999999);
 	hrsp.setHeader("Access-Control-Allow-Credentials","true");

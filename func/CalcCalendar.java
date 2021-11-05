@@ -1,19 +1,9 @@
-package wcy.usual;
+package wcy.usual.func;
 
-import java.util.Arrays;
-import java.util.List;
-
-public class UtilCalendar {
-public static void main(String[] args) {
-	List<String> lst = Arrays.asList(getMonthlyDate("19970128",542));
-	for(int i=0,len=lst.size();len!=i;i++){
-		if(0==i%12){
-			System.out.println();
-		}
-		System.out.print(lst.get(i)+'\t');
-	}
-}
-public static String[] getMonthlyDate(final String date,int len){
+public class CalcCalendar
+{
+public static String[] getMonthlyDate(final String date,int len)
+{
 	String[] dates=new String[len];
 	len+=1;
 	int year=Integer.parseUnsignedInt(date.substring(0,4)),month=Integer.parseUnsignedInt(date.substring(5,7)),day=Integer.parseUnsignedInt(date.substring(8,10));
@@ -59,7 +49,8 @@ public static String[] getMonthlyDate(final String date,int len){
 	}
 	return dates;
 }
-public static String getYYYY_MM_DDRepaymentDate(int y,int m,int d){
+public static String getYYYY_MM_DDRepaymentDate(int y,int m,int d)
+{
 	String date=String.valueOf(y);
 	if(9<m){
 		date=date+'-'+m;

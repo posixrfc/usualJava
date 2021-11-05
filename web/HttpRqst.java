@@ -37,7 +37,7 @@ import wcy.usual.codec.xml.XmlSerializer;
 
 public class HttpRqst implements HttpServletRequest
 {
-public HttpRqst(HttpServletRequest servletRequest) throws ServletException, IOException
+public HttpRqst(HttpServletRequest servletRequest) throws ServletException,IOException
 {
 	this.sreq=Objects.requireNonNull(servletRequest);
 	enctype=sreq.getContentType();

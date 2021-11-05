@@ -10,7 +10,7 @@ import java.util.Map;
 
 import wcy.usual.codec.Codec;
 
-public final class NetAgent
+public final class HttpAgent
 {
 public static final Object http(CharSequence type,CharSequence url,CharSequence body,Map<CharSequence,CharSequence> header,ResChecker checker)
 {
@@ -170,5 +170,5 @@ public static final Object http(CharSequence type,CharSequence url,Map<CharSeque
 		return http(type,url,(CharSequence)null,header,checker);
 	}
 }
-private NetAgent(){}
+private HttpAgent(){}
 }
