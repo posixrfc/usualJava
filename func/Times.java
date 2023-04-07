@@ -19,10 +19,7 @@ public static long getDiffValue(byte field,Serializable arg0,Serializable arg1)
 	Instant in0=null,in1=null;
 	long ms0=0L,ms1=0L;
 	if(YEAR==field || MONTH==field || DATE==field){
-		if(arg0 instanceof Integer){
-			ms0=(Integer)arg0;
-			ld0=LocalDate.from(Instant.ofEpochMilli(ms0));
-		}else if(arg0 instanceof Long){
+		if(arg0 instanceof Long){
 			ms0=(Long)arg0;
 			ld0=LocalDate.from(Instant.ofEpochMilli(ms0));
 		}else if(arg0 instanceof Date){
@@ -43,10 +40,7 @@ public static long getDiffValue(byte field,Serializable arg0,Serializable arg1)
 		}else{
 			return Long.MIN_VALUE;
 		}
-		if(arg1 instanceof Integer){
-			ms1=(Integer)arg1;
-			ld1=LocalDate.from(Instant.ofEpochMilli(ms1));
-		}else if(arg1 instanceof Long){
+		if(arg1 instanceof Long){
 			ms1=(Long)arg1;
 			ld1=LocalDate.from(Instant.ofEpochMilli(ms1));
 		}else if(arg1 instanceof Date){
